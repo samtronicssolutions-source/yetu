@@ -4,7 +4,6 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// Admin login
 router.post('/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -40,7 +39,6 @@ router.post('/admin/login', async (req, res) => {
   }
 });
 
-// Create default admin if not exists
 const createDefaultAdmin = async () => {
   const adminExists = await User.findOne({ role: 'admin' });
   if (!adminExists) {
