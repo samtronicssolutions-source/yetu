@@ -1,12 +1,10 @@
 const express = require('express');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const User = require('../models/User');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get dashboard stats
 router.get('/stats', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -23,7 +21,8 @@ router.get('/stats', auth, async (req, res) => {
     
     const recentOrders = await Order.find()
       .sort({ created_at: -1 })
-      .limit(10);
+      .limit(10)
+      .populate('items.product_id');
     
     res.json({
       totalProducts,
@@ -37,7 +36,6 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
-// Get all orders
 router.get('/orders', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -53,7 +51,6 @@ router.get('/orders', auth, async (req, res) => {
   }
 });
 
-// Update order status
 router.put('/orders/:id', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -66,6 +63,7 @@ router.put('/orders/:id', auth, async (req, res) => {
       { status },
       { new: true }
     );
+    if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
