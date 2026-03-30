@@ -1,13 +1,17 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const session = require('express-session');
 const path = require('path');
 const dotenv = require('dotenv');
+const connectDB = require('./config/database');
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(cors());
@@ -16,29 +20,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// Session
+// Session configuration
 app.use(session({
-  secret: process.env.JWT_SECRET,
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000
+  }
 }));
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB error:', err));
-
-// Import routes
+// Import routes - MAKE SURE ALL THESE FILES EXIST
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
 const orderRoutes = require('./routes/orders');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 
-// Use routes
+// API routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
@@ -70,7 +70,28 @@ app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
 });
 
+app.get('/admin/orders', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'orders.html'));
+});
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
