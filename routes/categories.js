@@ -4,7 +4,6 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all categories
 router.get('/', async (req, res) => {
   try {
     const categories = await Category.find().populate('parent_id');
@@ -14,7 +13,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single category
 router.get('/:id', async (req, res) => {
   try {
     const category = await Category.findById(req.params.id).populate('parent_id');
@@ -25,7 +23,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create category (admin only)
 router.post('/', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -40,7 +37,6 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Update category (admin only)
 router.put('/:id', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -59,7 +55,6 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Delete category (admin only)
 router.delete('/:id', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
