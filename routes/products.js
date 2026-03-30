@@ -5,19 +5,19 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all products
 router.get('/', async (req, res) => {
   try {
-    const { category, featured, limit } = req.query;
+    const { category, featured, limit, search } = req.query;
     let query = {};
     
     if (category) query.category_id = category;
     if (featured === 'true') query.featured = true;
+    if (search) {
+      query.$text = { $search: search };
+    }
     
     let productsQuery = Product.find(query).populate('category_id');
-    
     if (limit) productsQuery = productsQuery.limit(parseInt(limit));
-    
     const products = await productsQuery.sort({ created_at: -1 });
     res.json(products);
   } catch (error) {
@@ -25,7 +25,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single product
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate('category_id');
@@ -36,7 +35,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create product (admin only)
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -44,9 +42,12 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
     
     const productData = {
-      ...req.body,
+      name: req.body.name,
+      description: req.body.description,
       price: parseFloat(req.body.price),
-      stock: parseInt(req.body.stock)
+      category_id: req.body.category_id,
+      stock: parseInt(req.body.stock),
+      featured: req.body.featured === 'true'
     };
     
     if (req.file) {
@@ -61,7 +62,6 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   }
 });
 
-// Update product (admin only)
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -71,17 +71,17 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     
-    const updateData = {
-      ...req.body,
-      price: parseFloat(req.body.price),
-      stock: parseInt(req.body.stock)
-    };
+    product.name = req.body.name;
+    product.description = req.body.description;
+    product.price = parseFloat(req.body.price);
+    product.category_id = req.body.category_id;
+    product.stock = parseInt(req.body.stock);
+    product.featured = req.body.featured === 'true';
     
     if (req.file) {
-      updateData.image = `/uploads/products/${req.file.filename}`;
+      product.image = `/uploads/products/${req.file.filename}`;
     }
     
-    Object.assign(product, updateData);
     await product.save();
     res.json(product);
   } catch (error) {
@@ -89,7 +89,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
   }
 });
 
-// Delete product (admin only)
 router.delete('/:id', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
