@@ -11,9 +11,7 @@ async function getAccessToken() {
   
   try {
     const response = await axios.get(url, {
-      headers: {
-        Authorization: `Basic ${auth}`
-      }
+      headers: { Authorization: `Basic ${auth}` }
     });
     return response.data.access_token;
   } catch (error) {
