@@ -5,12 +5,10 @@ const { initiateMpesaPayment } = require('../utils/mpesa');
 
 const router = express.Router();
 
-// Create order
 router.post('/', async (req, res) => {
   try {
     const { customer_name, customer_phone, customer_email, items, payment_method } = req.body;
     
-    // Validate stock
     for (const item of items) {
       const product = await Product.findById(item.product_id);
       if (!product || product.stock < item.quantity) {
@@ -18,7 +16,6 @@ router.post('/', async (req, res) => {
       }
     }
     
-    // Calculate total
     let total = 0;
     for (const item of items) {
       const product = await Product.findById(item.product_id);
@@ -26,7 +23,6 @@ router.post('/', async (req, res) => {
       total += product.price * item.quantity;
     }
     
-    // Create order
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
     const order = new Order({
       order_number: orderNumber,
@@ -40,14 +36,12 @@ router.post('/', async (req, res) => {
     
     await order.save();
     
-    // Update stock
     for (const item of items) {
       await Product.findByIdAndUpdate(item.product_id, {
         $inc: { stock: -item.quantity }
       });
     }
     
-    // Process M-Pesa payment if selected
     if (payment_method === 'mpesa') {
       const mpesaResponse = await initiateMpesaPayment(customer_phone, total, orderNumber);
       if (mpesaResponse && mpesaResponse.ResponseCode === '0') {
@@ -70,7 +64,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get order by number
 router.get('/:orderNumber', async (req, res) => {
   try {
     const order = await Order.findOne({ order_number: req.params.orderNumber })
@@ -82,7 +75,6 @@ router.get('/:orderNumber', async (req, res) => {
   }
 });
 
-// M-Pesa callback
 router.post('/mpesa-callback', async (req, res) => {
   try {
     const data = req.body;
@@ -93,7 +85,6 @@ router.post('/mpesa-callback', async (req, res) => {
       const checkoutId = callback.CheckoutRequestID;
       
       if (resultCode === 0) {
-        // Payment successful
         const items = callback.CallbackMetadata.Item;
         let mpesaReceipt = '';
         
@@ -104,7 +95,6 @@ router.post('/mpesa-callback', async (req, res) => {
           }
         }
         
-        // Update order
         const order = await Order.findOne({ order_number: checkoutId });
         if (order) {
           order.payment_status = 'completed';
@@ -113,7 +103,6 @@ router.post('/mpesa-callback', async (req, res) => {
           await order.save();
         }
       } else {
-        // Payment failed
         const order = await Order.findOne({ order_number: checkoutId });
         if (order) {
           order.payment_status = 'failed';
