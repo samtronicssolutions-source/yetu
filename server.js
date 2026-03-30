@@ -31,7 +31,7 @@ app.use(session({
   }
 }));
 
-// Import routes - MAKE SURE ALL THESE FILES EXIST
+// Import routes
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
 const orderRoutes = require('./routes/orders');
@@ -62,6 +62,14 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'checkout.html'));
 });
 
+app.get('/order-success', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'order-success.html'));
+});
+
+app.get('/category', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'category.html'));
+});
+
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html'));
 });
@@ -74,7 +82,7 @@ app.get('/admin/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'orders.html'));
 });
 
-// Health check endpoint for Render
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
