@@ -40,16 +40,20 @@ router.post('/admin/login', async (req, res) => {
 });
 
 const createDefaultAdmin = async () => {
-  const adminExists = await User.findOne({ role: 'admin' });
-  if (!adminExists) {
-    const admin = new User({
-      username: 'admin',
-      password: 'admin123',
-      email: 'admin@yetu.com',
-      role: 'admin'
-    });
-    await admin.save();
-    console.log('Default admin created');
+  try {
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+      const admin = new User({
+        username: 'admin',
+        password: 'admin123',
+        email: 'admin@yetu.com',
+        role: 'admin'
+      });
+      await admin.save();
+      console.log('Default admin created');
+    }
+  } catch (error) {
+    console.error('Error creating admin:', error);
   }
 };
 
