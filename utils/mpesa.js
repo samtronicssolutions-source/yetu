@@ -1,5 +1,6 @@
 const axios = require('axios');
 
+// Get OAuth token from Safaricom
 async function getAccessToken() {
   const consumerKey = process.env.MPESA_CONSUMER_KEY;
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
@@ -20,6 +21,7 @@ async function getAccessToken() {
   }
 }
 
+// Initiate STK Push
 async function initiateMpesaPayment(phone, amount, orderNumber) {
   const accessToken = await getAccessToken();
   if (!accessToken) return null;
@@ -33,17 +35,25 @@ async function initiateMpesaPayment(phone, amount, orderNumber) {
     ? 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
     : 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
   
+  // Format phone number (remove leading 0 or +, ensure 254)
+  let formattedPhone = phone.toString().trim();
+  if (formattedPhone.startsWith('0')) {
+    formattedPhone = '254' + formattedPhone.substring(1);
+  } else if (formattedPhone.startsWith('+')) {
+    formattedPhone = formattedPhone.substring(1);
+  }
+  
   const payload = {
     BusinessShortCode: shortcode,
     Password: password,
     Timestamp: timestamp,
     TransactionType: 'CustomerPayBillOnline',
     Amount: Math.round(amount),
-    PartyA: phone,
+    PartyA: formattedPhone,
     PartyB: shortcode,
-    PhoneNumber: phone,
+    PhoneNumber: formattedPhone,
     CallBackURL: `${process.env.BASE_URL}/api/orders/mpesa-callback`,
-    AccountReference: orderNumber,
+    AccountReference: orderNumber.slice(0, 12),
     TransactionDesc: `Payment for order ${orderNumber}`
   };
   
