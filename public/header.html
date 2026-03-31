@@ -1,25 +1,73 @@
 <header>
     <div class="header-top">
         <div class="container">
-            <div class="logo"><h1><a href="/">Yetu</a></h1></div>
-            <div class="search-bar"><input type="text" id="searchInput" placeholder="What are you looking for?"><button onclick="searchProducts()"><i class="fas fa-search"></i></button></div>
-            <div class="header-actions"><a href="/cart" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">0</span></a></div>
+            <div class="logo">
+                <h1><a href="/">Yetu</a></h1>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search products...">
+                <button onclick="searchProducts()"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-actions">
+                <a href="/cart" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+            </div>
         </div>
     </div>
-    <nav class="main-nav"><div class="container"><ul class="nav-menu" id="categoriesMenu"></ul></div></nav>
+    <nav class="main-nav">
+        <div class="container">
+            <ul class="nav-menu" id="categoriesMenu"></ul>
+        </div>
+    </nav>
 </header>
+
 <script>
     async function loadNavCategories() {
         try {
             const res = await fetch('/api/categories');
-            const cats = await res.json();
-            const mainCats = cats.filter(c => !c.parent_id);
+            const categories = await res.json();
+            const mainCats = categories.filter(c => !c.parent_id);
+            
             const menu = document.getElementById('categoriesMenu');
-            if (menu) menu.innerHTML = '<li><a href="/">Home</a></li>' + mainCats.map(cat => `
-                <li class="dropdown"><a href="/category?id=${cat._id}">${cat.name}</a>
-                ${cats.filter(c => c.parent_id === cat._id).length ? `<ul class="dropdown-menu">${cats.filter(c => c.parent_id === cat._id).map(sub => `<li><a href="/category?id=${sub._id}">${sub.name}</a></li>`).join('')}</ul>` : ''}</li>`).join('');
-        } catch (error) { console.error(error); }
+            if (menu) {
+                menu.innerHTML = '<li><a href="/">Home</a></li>' + 
+                    mainCats.map(cat => `
+                        <li class="dropdown">
+                            <a href="/category?id=${cat._id}">${escapeHtml(cat.name)}</a>
+                            ${categories.filter(c => c.parent_id === cat._id).length ? `
+                                <ul class="dropdown-menu">
+                                    ${categories.filter(c => c.parent_id === cat._id).map(sub => `
+                                        <li><a href="/category?id=${sub._id}">${escapeHtml(sub.name)}</a></li>
+                                    `).join('')}
+                                </ul>
+                            ` : ''}
+                        </li>
+                    `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
     }
-    function searchProducts() { const q = document.getElementById('searchInput').value; if (q) window.location.href = `/category?search=${encodeURIComponent(q)}`; }
-    loadNavCategories();
+    
+    function searchProducts() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) {
+            window.location.href = `/category?search=${encodeURIComponent(query)}`;
+        }
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Load categories when page loads
+    document.addEventListener('DOMContentLoaded', loadNavCategories);
 </script>
