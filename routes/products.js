@@ -51,9 +51,10 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       featured: req.body.featured === 'true'
     };
     
-    if (req.file) {
-      productData.image = `/uploads/products/${req.file.filename}`;
-    }
+ // In the POST and PUT routes, when saving image:
+if (req.file) {
+  productData.image = `/images/products/${req.file.filename}`;
+}
     
     const product = new Product(productData);
     await product.save();
@@ -80,10 +81,10 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
     product.stock = parseInt(req.body.stock);
     product.featured = req.body.featured === 'true';
     
-    if (req.file) {
-      product.image = `/uploads/products/${req.file.filename}`;
-    }
-    
+  // In the POST and PUT routes, when saving image:
+if (req.file) {
+  productData.image = `/images/products/${req.file.filename}`;
+}
     await product.save();
     res.json(product);
   } catch (error) {
