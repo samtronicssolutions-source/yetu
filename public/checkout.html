@@ -6,21 +6,127 @@
     <title>Checkout - Yetu</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    <style>.checkout-container{display:grid;grid-template-columns:1fr 350px;gap:30px;margin:30px 0}.checkout-form{background:white;padding:30px;border-radius:10px}.form-group{margin-bottom:20px}.form-group label{display:block;margin-bottom:5px;font-weight:bold}.form-group input,.form-group select{width:100%;padding:10px;border:1px solid #ddd;border-radius:5px}.order-summary{background:white;padding:30px;border-radius:10px;height:fit-content}.summary-item{display:flex;justify-content:space-between;margin-bottom:15px;padding-bottom:15px;border-bottom:1px solid #eee}.summary-total{display:flex;justify-content:space-between;margin-top:20px;padding-top:20px;border-top:2px solid #f57224;font-weight:bold}.btn-place-order{width:100%;padding:15px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;margin-top:20px}@media(max-width:768px){.checkout-container{grid-template-columns:1fr}}</style>
+    <style>
+        .checkout-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .checkout-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .order-summary {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f57224;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .btn-place-order {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn-place-order:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .mpesa-note {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="header-placeholder"></div>
-    <main><div class="container"><h1>Checkout</h1><div id="checkoutContent"></div></div></main>
+    
+    <main>
+        <div class="container">
+            <h1>Checkout</h1>
+            <div id="checkoutContent"></div>
+        </div>
+    </main>
+    
     <div id="footer-placeholder"></div>
-    <script src="/js/main.js"></script><script src="/js/cart.js"></script>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/cart.js"></script>
     <script>
         async function loadCheckout() {
             const cart = getCart();
             const ids = Object.keys(cart);
-            if (!ids.length) { window.location.href = '/cart'; return; }
+            
+            if (!ids.length) {
+                window.location.href = '/cart';
+                return;
+            }
+            
             try {
                 const items = [];
                 let total = 0;
+                
                 for (const id of ids) {
                     const res = await fetch(`/api/products/${id}`);
                     const p = await res.json();
@@ -29,34 +135,182 @@
                     total += sub;
                     items.push({ ...p, quantity: qty, subtotal: sub });
                 }
-                document.getElementById('checkoutContent').innerHTML = `<div class="checkout-container"><div class="checkout-form"><h2>Shipping Information</h2><form id="checkoutForm"><div class="form-group"><label>Full Name</label><input type="text" id="name" required></div><div class="form-group"><label>Phone Number</label><input type="tel" id="phone" placeholder="254XXXXXXXXX" required></div><div class="form-group"><label>Email</label><input type="email" id="email" required></div><div class="form-group"><label>Payment Method</label><select id="paymentMethod"><option value="mpesa">M-Pesa (Lipa Na M-Pesa)</option><option value="cod">Cash on Delivery</option></select></div><button type="submit" class="btn-place-order">Place Order</button></form></div><div class="order-summary"><h2>Order Summary</h2>${items.map(i => `<div class="summary-item"><span>${i.name} x ${i.quantity}</span><span>KSh ${i.subtotal.toLocaleString()}</span></div>`).join('')}<div class="summary-total"><strong>Total</strong><strong>KSh ${total.toLocaleString()}</strong></div></div></div>`;
-                document.getElementById('checkoutForm').addEventListener('submit', async (e) => { e.preventDefault(); await placeOrder(); });
-            } catch (error) { console.error(error); }
+                
+                document.getElementById('checkoutContent').innerHTML = `
+                    <div class="checkout-container">
+                        <div class="checkout-form">
+                            <h2>Shipping Information</h2>
+                            <form id="checkoutForm">
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" id="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number * (e.g., 2547XXXXXXXX)</label>
+                                    <input type="tel" id="phone" placeholder="2547XXXXXXXX" required>
+                                    <small style="color: #666;">M-Pesa will send payment request to this number</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="email">
+                                </div>
+                                <div class="form-group">
+                                    <label>Payment Method *</label>
+                                    <select id="paymentMethod">
+                                        <option value="mpesa">M-Pesa (Lipa Na M-Pesa - STK Push)</option>
+                                        <option value="cod">Cash on Delivery</option>
+                                    </select>
+                                </div>
+                                <div class="mpesa-note" id="mpesaNote">
+                                    <i class="fas fa-info-circle"></i> 
+                                    For M-Pesa payments, you will receive a payment request on your phone. 
+                                    Enter your PIN to complete payment.
+                                </div>
+                                <button type="submit" class="btn-place-order" id="placeOrderBtn">
+                                    <i class="fas fa-check"></i> Place Order
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="order-summary">
+                            <h2>Order Summary</h2>
+                            ${items.map(i => `
+                                <div class="summary-item">
+                                    <span>${escapeHtml(i.name)} x ${i.quantity}</span>
+                                    <span>KSh ${i.subtotal.toLocaleString()}</span>
+                                </div>
+                            `).join('')}
+                            <div class="summary-total">
+                                <strong>Total</strong>
+                                <strong>KSh ${total.toLocaleString()}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Update M-Pesa note visibility based on payment method
+                const paymentSelect = document.getElementById('paymentMethod');
+                const mpesaNote = document.getElementById('mpesaNote');
+                
+                paymentSelect.addEventListener('change', () => {
+                    mpesaNote.style.display = paymentSelect.value === 'mpesa' ? 'block' : 'none';
+                });
+                
+                document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await placeOrder(total);
+                });
+                
+            } catch (error) {
+                console.error('Error loading checkout:', error);
+            }
         }
-        async function placeOrder() {
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const payment = document.getElementById('paymentMethod').value;
-            if (!name || !phone || !email) { showNotification('Please fill all fields', 'error'); return; }
+        
+        async function placeOrder(total) {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const submitBtn = document.getElementById('placeOrderBtn');
+            
+            if (!name) {
+                showNotification('Please enter your name', 'error');
+                return;
+            }
+            
+            if (!phone) {
+                showNotification('Please enter your phone number', 'error');
+                return;
+            }
+            
+            // Validate phone format
+            const phoneRegex = /^(254|0)?[7-9][0-9]{8}$/;
+            if (!phoneRegex.test(phone)) {
+                showNotification('Please enter a valid Kenyan phone number (e.g., 2547XXXXXXXX)', 'error');
+                return;
+            }
+            
             const cart = getCart();
             const items = Object.entries(cart).map(([id, qty]) => ({ product_id: id, quantity: qty }));
-            const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email, items, payment_method: payment }) });
-            const data = await res.json();
-            if (data.success) {
-                localStorage.removeItem('cart');
-                if (payment === 'mpesa') showNotification('M-Pesa initiated. Check your phone.', 'success');
-                window.location.href = `/order-success?order=${data.order_number}`;
-            } else showNotification(data.error || 'Order failed', 'error');
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+            
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: name,
+                        customer_phone: phone,
+                        customer_email: email,
+                        items: items,
+                        payment_method: paymentMethod
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Clear cart
+                    localStorage.removeItem('cart');
+                    updateCartCount();
+                    
+                    if (paymentMethod === 'mpesa') {
+                        if (result.payment_initiated === false) {
+                            showNotification('Payment initiation failed. Please try again or choose Cash on Delivery.', 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
+                        } else {
+                            showNotification('Payment request sent to your phone! Please enter your PIN to complete payment.', 'success');
+                            // Redirect to order success after 5 seconds
+                            setTimeout(() => {
+                                window.location.href = `/order-success?order=${result.order_number}`;
+                            }, 5000);
+                        }
+                    } else {
+                        // Cash on delivery
+                        window.location.href = `/order-success?order=${result.order_number}`;
+                    }
+                } else {
+                    showNotification(result.error || 'Order failed. Please try again.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
+                }
+            } catch (error) {
+                console.error('Error placing order:', error);
+                showNotification('Network error. Please check your connection and try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
+            }
         }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
         async function loadHeaderFooter() {
-            const header = await (await fetch('/header.html')).text();
-            const footer = await (await fetch('/footer.html')).text();
-            document.getElementById('header-placeholder').innerHTML = header;
-            document.getElementById('footer-placeholder').innerHTML = footer;
-            updateCartCount();
-            if (typeof loadNavCategories === 'function') loadNavCategories();
+            try {
+                const headerRes = await fetch('/header.html');
+                const footerRes = await fetch('/footer.html');
+                const header = await headerRes.text();
+                const footer = await footerRes.text();
+                document.getElementById('header-placeholder').innerHTML = header;
+                document.getElementById('footer-placeholder').innerHTML = footer;
+                updateCartCount();
+                if (typeof loadNavCategories === 'function') loadNavCategories();
+            } catch (error) {
+                console.error('Error loading header/footer:', error);
+            }
         }
+        
         loadHeaderFooter();
         loadCheckout();
     </script>
