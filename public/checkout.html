@@ -223,10 +223,10 @@
                 return;
             }
             
-            // Validate phone format
+            // Validate phone format (Kenyan number)
             const phoneRegex = /^(254|0)?[7-9][0-9]{8}$/;
             if (!phoneRegex.test(phone)) {
-                showNotification('Please enter a valid Kenyan phone number (e.g., 2547XXXXXXXX)', 'error');
+                showNotification('Please enter a valid Kenyan phone number (e.g., 2547XXXXXXXX or 07XXXXXXXX)', 'error');
                 return;
             }
             
@@ -264,6 +264,8 @@
                             submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
                         } else {
                             showNotification('Payment request sent to your phone! Please enter your PIN to complete payment.', 'success');
+                            // Store payment method for success page
+                            localStorage.setItem('lastPaymentMethod', 'mpesa');
                             // Redirect to order success after 5 seconds
                             setTimeout(() => {
                                 window.location.href = `/order-success?order=${result.order_number}`;
