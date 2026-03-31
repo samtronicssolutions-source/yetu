@@ -1,3 +1,4 @@
+// Cart functions
 function getCart() {
     return JSON.parse(localStorage.getItem('cart') || '{}');
 }
@@ -47,4 +48,15 @@ function formatPrice(price) {
     return `KSh ${price.toLocaleString()}`;
 }
 
-document.addEventListener('DOMContentLoaded', updateCartCount);
+// Global search function
+window.searchProducts = function() {
+    const query = document.getElementById('searchInput').value.trim();
+    if (query) {
+        window.location.href = `/category?search=${encodeURIComponent(query)}`;
+    }
+};
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    updateCartCount();
+});
