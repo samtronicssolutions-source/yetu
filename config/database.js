@@ -12,10 +12,10 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds
-      family: 4, // Use IPv4, skip trying IPv6
-      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4,
+      maxPoolSize: 10,
     });
     
     isConnected = true;
@@ -26,9 +26,8 @@ const connectDB = async () => {
     
     // Handle connection events
     mongoose.connection.on('disconnected', () => {
-      console.log('⚠️ MongoDB disconnected! Attempting to reconnect...');
+      console.log('⚠️ MongoDB disconnected!');
       isConnected = false;
-      setTimeout(connectDB, 5000);
     });
     
     mongoose.connection.on('error', (err) => {
@@ -36,13 +35,15 @@ const connectDB = async () => {
       isConnected = false;
     });
     
+    mongoose.connection.on('reconnected', () => {
+      console.log('✅ MongoDB reconnected');
+      isConnected = true;
+    });
+    
   } catch (error) {
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
     isConnected = false;
-    
-    // Retry connection after 5 seconds
-    console.log('🔄 Retrying connection in 5 seconds...');
-    setTimeout(connectDB, 5000);
+    throw error;
   }
 };
 
@@ -74,17 +75,5 @@ async function createIndexes() {
     console.error('Error creating indexes:', error);
   }
 }
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed through app termination');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error closing MongoDB connection:', err);
-    process.exit(1);
-  }
-});
 
 module.exports = connectDB;
