@@ -1,4 +1,3 @@
-// Cart functions
 function getCart() {
     return JSON.parse(localStorage.getItem('cart') || '{}');
 }
@@ -23,13 +22,6 @@ function removeFromCart(productId) {
     if (window.location.pathname.includes('cart.html')) location.reload();
 }
 
-function updateCartItem(productId, quantity) {
-    const cart = getCart();
-    if (quantity <= 0) delete cart[productId];
-    else cart[productId] = quantity;
-    saveCart(cart);
-}
-
 function updateCartCount() {
     const cart = getCart();
     const count = Object.values(cart).reduce((a, b) => a + b, 0);
@@ -44,11 +36,6 @@ function showNotification(message, type = 'success') {
     setTimeout(() => notification.remove(), 3000);
 }
 
-function formatPrice(price) {
-    return `KSh ${price.toLocaleString()}`;
-}
-
-// Global search function
 window.searchProducts = function() {
     const query = document.getElementById('searchInput').value.trim();
     if (query) {
@@ -56,7 +43,6 @@ window.searchProducts = function() {
     }
 };
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
 });
