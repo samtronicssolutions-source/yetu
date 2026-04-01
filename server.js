@@ -5,22 +5,18 @@ const path = require('path');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 
-// Connect to MongoDB
 connectDB();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// Session configuration (using MemoryStore - no connect-mongo needed)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
@@ -28,25 +24,22 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
-// Import routes
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
 const orderRoutes = require('./routes/orders');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 
-// API routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Serve HTML files
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -71,7 +64,6 @@ app.get('/category', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'category.html'));
 });
 
-// Admin routes - CRITICAL: These must be present
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html'));
 });
@@ -88,18 +80,15 @@ app.get('/admin/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'orders.html'));
 });
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// 404 handler - This should be LAST
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
