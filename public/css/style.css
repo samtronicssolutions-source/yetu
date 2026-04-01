@@ -35,6 +35,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .logo h1 a {
@@ -67,6 +68,11 @@ body {
     border: none;
     border-radius: 0 5px 5px 0;
     cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-bar button:hover {
+    background: #e05e1a;
 }
 
 .header-actions a {
@@ -317,11 +323,12 @@ body {
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
-    transition: transform 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* ============================================
@@ -336,6 +343,19 @@ body {
     margin-bottom: 40px;
     font-size: 32px;
     color: #333;
+    position: relative;
+}
+
+.section-title:after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: #f57224;
+    border-radius: 2px;
 }
 
 .products-grid {
@@ -349,7 +369,7 @@ body {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .product-card:hover {
@@ -386,6 +406,11 @@ body {
 .product-info h3 a {
     color: #333;
     text-decoration: none;
+    transition: color 0.3s;
+}
+
+.product-info h3 a:hover {
+    color: #f57224;
 }
 
 .price {
@@ -454,6 +479,11 @@ body {
     color: white;
     text-decoration: none;
     border-radius: 5px;
+    transition: transform 0.3s;
+}
+
+.btn-category:hover {
+    transform: scale(1.05);
 }
 
 /* ============================================
@@ -558,7 +588,7 @@ footer {
 .footer-col ul li a {
     color: #ccc;
     text-decoration: none;
-    transition: color 0.3s;
+    transition: color 0.3s, padding-left 0.3s;
 }
 
 .footer-col ul li a:hover {
@@ -619,6 +649,7 @@ footer {
     border-radius: 3px;
     cursor: pointer;
     font-size: 12px;
+    transition: background 0.3s;
 }
 
 .newsletter button:hover {
@@ -655,6 +686,15 @@ footer {
     border-radius: 5px;
     z-index: 9999;
     animation: slideIn 0.3s ease-out;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.notification.error {
+    background: #e74c3c;
+}
+
+.notification.info {
+    background: #3498db;
 }
 
 @keyframes slideIn {
@@ -688,12 +728,15 @@ footer {
 
 .cart-table th {
     background: #f8f9fa;
+    font-weight: bold;
 }
 
 .cart-actions {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .cart-summary {
@@ -711,6 +754,11 @@ footer {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-checkout:hover {
+    background: #219a52;
 }
 
 .btn-update {
@@ -720,6 +768,11 @@ footer {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-update:hover {
+    background: #2980b9;
 }
 
 .empty-cart {
@@ -743,6 +796,7 @@ footer {
     background: white;
     padding: 30px;
     border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .form-group {
@@ -756,11 +810,13 @@ footer {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
+    font-size: 14px;
 }
 
 .order-summary {
@@ -768,6 +824,7 @@ footer {
     padding: 30px;
     border-radius: 10px;
     height: fit-content;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .summary-item {
@@ -785,6 +842,7 @@ footer {
     padding-top: 20px;
     border-top: 2px solid #f57224;
     font-weight: bold;
+    font-size: 18px;
 }
 
 .btn-place-order {
@@ -796,6 +854,12 @@ footer {
     border-radius: 5px;
     cursor: pointer;
     margin-top: 20px;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.btn-place-order:hover {
+    background: #219a52;
 }
 
 .btn-place-order:disabled {
@@ -830,11 +894,173 @@ footer {
 }
 
 /* ============================================
+   ADMIN PANEL STYLES
+   ============================================ */
+.btn-clear {
+    background: #dc3545;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-clear:hover {
+    background: #c82333;
+}
+
+.btn-refresh {
+    background: #17a2b8;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-refresh:hover {
+    background: #138496;
+}
+
+.filter-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.modal-content p {
+    color: #666;
+    line-height: 1.5;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.btn-confirm {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #c82333;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-processing {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-shipped {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-delivered {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 1024px) {
     .checkout-container {
         grid-template-columns: 1fr;
+    }
+    
+    .hero-slider {
+        height: 450px;
     }
 }
 
@@ -938,6 +1164,10 @@ footer {
         max-width: 300px;
         margin: 0 auto;
     }
+    
+    .filter-group {
+        justify-content: center;
+    }
 }
 
 @media (max-width: 480px) {
@@ -960,4 +1190,41 @@ footer {
     .slide-content p {
         font-size: 14px;
     }
+    
+    .cart-actions {
+        flex-direction: column;
+    }
+    
+    .cart-actions button {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.text-center {
+    text-align: center;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
 }
