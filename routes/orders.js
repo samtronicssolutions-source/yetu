@@ -8,9 +8,14 @@ const router = express.Router();
 function formatPhoneNumber(phone) {
   let formatted = phone.toString().trim();
   formatted = formatted.replace(/\D/g, '');
+  
   if (formatted.startsWith('0')) {
     formatted = '254' + formatted.substring(1);
-  } else if (!formatted.startsWith('254')) {
+  } else if (formatted.startsWith('254')) {
+    // Already correct
+  } else if (formatted.startsWith('+254')) {
+    formatted = formatted.substring(1);
+  } else {
     formatted = '254' + formatted;
   }
   return formatted;
@@ -18,15 +23,28 @@ function formatPhoneNumber(phone) {
 
 router.post('/', async (req, res) => {
   try {
+    console.log('\n📦 Creating new order...');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const { customer_name, customer_phone, customer_email, items, payment_method } = req.body;
     
+    // Validate inputs
+    if (!customer_name || !customer_phone || !items || items.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Validate stock
     for (const item of items) {
       const product = await Product.findById(item.product_id);
-      if (!product || product.stock < item.quantity) {
-        return res.status(400).json({ error: `Insufficient stock for ${product?.name}` });
+      if (!product) {
+        return res.status(400).json({ error: `Product not found` });
+      }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
       }
     }
     
+    // Calculate total
     let total = 0;
     const orderItems = [];
     
@@ -42,8 +60,10 @@ router.post('/', async (req, res) => {
       });
     }
     
+    // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
     
+    // Create order
     const order = new Order({
       order_number: orderNumber,
       customer_name,
@@ -57,20 +77,28 @@ router.post('/', async (req, res) => {
     });
     
     await order.save();
+    console.log('✅ Order created:', orderNumber);
     
+    // Update stock
     for (const item of items) {
       await Product.findByIdAndUpdate(item.product_id, {
         $inc: { stock: -item.quantity }
       });
     }
     
+    // Process M-Pesa payment if selected
     if (payment_method === 'mpesa') {
       const formattedPhone = formatPhoneNumber(customer_phone);
+      console.log('Processing M-Pesa for phone:', formattedPhone);
+      
       const mpesaResponse = await initiateMpesaPayment(formattedPhone, total, orderNumber);
       
-      if (mpesaResponse && mpesaResponse.ResponseCode === '0') {
+      if (mpesaResponse && !mpesaResponse.error && mpesaResponse.ResponseCode === '0') {
+        // Save checkout ID
         order.mpesa_transaction_id = mpesaResponse.CheckoutRequestID;
         await order.save();
+        
+        console.log('✅ M-Pesa initiated successfully');
         
         return res.json({
           success: true,
@@ -79,23 +107,28 @@ router.post('/', async (req, res) => {
           message: 'M-Pesa payment initiated. Please check your phone.'
         });
       } else {
+        // M-Pesa initiation failed
+        const errorMsg = mpesaResponse?.message || mpesaResponse?.ResponseDescription || 'Payment initiation failed';
+        console.error('❌ M-Pesa initiation failed:', errorMsg);
+        
         return res.json({
           success: true,
           order_number: orderNumber,
           payment_initiated: false,
-          message: 'Order created but payment initiation failed.'
+          message: `Order created but payment failed: ${errorMsg}. Please try Cash on Delivery.`
         });
       }
     }
     
+    // Cash on delivery
     res.json({
       success: true,
       order_number: orderNumber,
-      message: 'Order created successfully.'
+      message: 'Order created successfully. You will pay upon delivery.'
     });
     
   } catch (error) {
-    console.error('Order creation error:', error);
+    console.error('❌ Order creation error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -113,8 +146,9 @@ router.get('/:orderNumber', async (req, res) => {
 
 router.post('/mpesa-callback', async (req, res) => {
   try {
+    console.log('\n📞 M-Pesa Callback received');
     const data = req.body;
-    console.log('M-Pesa Callback received');
+    console.log('Callback data:', JSON.stringify(data, null, 2));
     
     if (data.Body && data.Body.stkCallback) {
       const callback = data.Body.stkCallback;
@@ -122,14 +156,17 @@ router.post('/mpesa-callback', async (req, res) => {
       const checkoutId = callback.CheckoutRequestID;
       const resultDesc = callback.ResultDesc;
       
+      console.log(`Callback: Checkout ID: ${checkoutId}, Result: ${resultCode}, Description: ${resultDesc}`);
+      
       const order = await Order.findOne({ mpesa_transaction_id: checkoutId });
       
       if (!order) {
-        console.log('Order not found for checkout ID:', checkoutId);
+        console.log('❌ Order not found for checkout ID:', checkoutId);
         return res.json({ ResultCode: 1, ResultDesc: 'Order not found' });
       }
       
       if (resultCode === 0) {
+        // Payment successful
         const items = callback.CallbackMetadata?.Item || [];
         let mpesaReceipt = '';
         
@@ -144,9 +181,11 @@ router.post('/mpesa-callback', async (req, res) => {
         order.mpesa_transaction_id = mpesaReceipt;
         
         await order.save();
-        console.log(`✅ Payment successful for order ${order.order_number}`);
+        
+        console.log(`✅ Payment successful for order ${order.order_number}, Receipt: ${mpesaReceipt}`);
         
       } else {
+        // Payment failed - restore stock
         order.payment_status = 'failed';
         order.status = 'cancelled';
         
@@ -157,6 +196,7 @@ router.post('/mpesa-callback', async (req, res) => {
         }
         
         await order.save();
+        
         console.log(`❌ Payment failed for order ${order.order_number}: ${resultDesc}`);
       }
     }
@@ -164,8 +204,8 @@ router.post('/mpesa-callback', async (req, res) => {
     res.json({ ResultCode: 0, ResultDesc: 'Success' });
     
   } catch (error) {
-    console.error('M-Pesa callback error:', error);
-    res.json({ ResultCode: 1, ResultDesc: 'Error' });
+    console.error('❌ M-Pesa callback error:', error);
+    res.json({ ResultCode: 1, ResultDesc: 'Error processing callback' });
   }
 });
 
