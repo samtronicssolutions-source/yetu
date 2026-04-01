@@ -8,7 +8,7 @@
     <title>Yetu - Quality Products for Every Home in Kenya</title>
     <meta name="title" content="Yetu - Quality Products for Every Home in Kenya">
     <meta name="description" content="Shop the best quality products in Kenya at Yetu. Find Audio, TV, Accessories, and more. Free shipping on orders over KSh 5,000. Pay with M-Pesa or Cash on Delivery.">
-    <meta name="keywords" content="yetu, ecommerce kenya, online shopping kenya, audio, tv, accessories, electronics, kitchenware, m-pesa payments">
+    <meta name="keywords" content="yetu, ecommerce kenya, online shopping kenya, audio, tv, accessories, electronics, kitchenware, m-pesa payments, cash on delivery kenya">
     <meta name="author" content="Yetu">
     <meta name="robots" content="index, follow">
     <meta name="language" content="English">
@@ -129,11 +129,14 @@
                     
                     <h3>Shop with Confidence</h3>
                     <ul>
-                        <li>✓ Secure M-Pesa payments</li>
-                        <li>✓ Cash on delivery available</li>
-                        <li>✓ Quality products guaranteed</li>
-                        <li>✓ Fast delivery across Kenya</li>
+                        <li><i class="fas fa-check-circle"></i> Secure M-Pesa payments</li>
+                        <li><i class="fas fa-truck"></i> Cash on delivery available</li>
+                        <li><i class="fas fa-medal"></i> Quality products guaranteed</li>
+                        <li><i class="fas fa-rocket"></i> Fast delivery across Kenya</li>
                     </ul>
+                    
+                    <h3>Popular Categories</h3>
+                    <p>Explore our wide range of products including high-quality Audio systems, modern TV sets, essential Accessories, and more. Whether you're upgrading your home entertainment or looking for the perfect gift, Yetu has something for everyone.</p>
                 </div>
             </div>
         </section>
@@ -158,7 +161,7 @@
                                 </a>
                             </div>
                             <div class="product-info">
-                                <h3><a href="/product/${p._id}">${p.name}</a></h3>
+                                <h3><a href="/product/${p._id}">${escapeHtml(p.name)}</a></h3>
                                 <p class="price">KSh ${p.price.toLocaleString()}</p>
                                 <button onclick="addToCart('${p._id}')" class="btn-add-to-cart">
                                     <i class="fas fa-shopping-cart"></i> Add to Cart
@@ -204,6 +207,16 @@
             } catch (error) {
                 console.error('Error loading header/footer:', error);
             }
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
         }
 
         loadHeaderFooter();
