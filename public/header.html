@@ -24,7 +24,6 @@
 </header>
 
 <script>
-    // Load categories for navigation
     async function loadNavCategories() {
         try {
             const response = await fetch('/api/categories');
@@ -52,13 +51,11 @@
         }
     }
     
-    // Search function - redirects to category page with search query
     function searchProducts() {
         const query = document.getElementById('searchInput').value.trim();
         if (query) {
             window.location.href = `/category?search=${encodeURIComponent(query)}`;
         } else {
-            // Show red border if empty
             const input = document.getElementById('searchInput');
             input.style.border = '2px solid #e74c3c';
             setTimeout(() => {
@@ -67,19 +64,14 @@
         }
     }
     
-    // Search on Enter key
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchProducts();
-        }
+        if (e.key === 'Enter') searchProducts();
     });
     
-    // Clear red border on typing
     document.getElementById('searchInput').addEventListener('input', function() {
         this.style.border = '2px solid #f57224';
     });
     
-    // Escape HTML to prevent XSS
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -90,6 +82,5 @@
         });
     }
     
-    // Load categories when page loads
     loadNavCategories();
 </script>
