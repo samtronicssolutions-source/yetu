@@ -3,3 +3,5 @@ node_modules/
 uploads/
 .DS_Store
 *.log
+public/images/products/*
+!public/images/products/.gitkeep
