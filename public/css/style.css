@@ -6,8 +6,8 @@
 
 body {
     font-family: 'Poppins', 'Arial', sans-serif;
-    background: #f8fafc;
-    color: #1e293b;
+    background: #0a0a0a;
+    color: #e5e5e5;
     padding-top: 120px;
 }
 
@@ -21,14 +21,15 @@ body {
    HEADER STYLES
    ============================================ */
 .header-top {
-    background: #ffffff;
+    background: #000000;
     padding: 15px 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 1px 3px rgba(255, 255, 255, 0.05);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
+    border-bottom: 1px solid #1a1a1a;
 }
 
 .header-top .container {
@@ -39,7 +40,7 @@ body {
 }
 
 .logo h1 a {
-    color: #0f172a;
+    color: #ffffff;
     text-decoration: none;
     font-size: 28px;
     font-weight: 700;
@@ -47,7 +48,7 @@ body {
 }
 
 .logo h1 a span {
-    color: #3b82f6;
+    color: #f5a623;
 }
 
 .search-bar {
@@ -60,36 +61,38 @@ body {
 .search-bar input {
     flex: 1;
     padding: 12px 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #2a2a2a;
     border-right: none;
     border-radius: 8px 0 0 8px;
     font-size: 14px;
     outline: none;
     transition: all 0.2s;
-    background: #f8fafc;
+    background: #111111;
+    color: #ffffff;
 }
 
 .search-bar input:focus {
-    border-color: #3b82f6;
-    background: #ffffff;
+    border-color: #f5a623;
+    background: #1a1a1a;
 }
 
 .search-bar button {
     padding: 12px 20px;
-    background: #3b82f6;
-    color: white;
+    background: #f5a623;
+    color: #000000;
     border: none;
     border-radius: 0 8px 8px 0;
     cursor: pointer;
     transition: background 0.2s;
+    font-weight: 600;
 }
 
 .search-bar button:hover {
-    background: #2563eb;
+    background: #e09512;
 }
 
 .header-actions a {
-    color: #1e293b;
+    color: #ffffff;
     text-decoration: none;
     font-size: 24px;
     position: relative;
@@ -100,7 +103,7 @@ body {
     align-items: center;
     gap: 5px;
     text-decoration: none;
-    color: #1e293b;
+    color: #ffffff;
     position: relative;
 }
 
@@ -113,8 +116,8 @@ body {
     position: absolute;
     top: -8px;
     right: -8px;
-    background: #ef4444;
-    color: white;
+    background: #f5a623;
+    color: #000000;
     border-radius: 50%;
     padding: 2px 6px;
     font-size: 10px;
@@ -127,9 +130,9 @@ body {
    NAVIGATION STYLES
    ============================================ */
 .main-nav {
-    background: #ffffff;
-    border-top: 1px solid #eef2ff;
-    border-bottom: 1px solid #eef2ff;
+    background: #000000;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
     position: fixed;
     top: 70px;
     left: 0;
@@ -154,7 +157,7 @@ body {
 .nav-menu > li > a {
     display: block;
     padding: 14px 20px;
-    color: #475569;
+    color: #b0b0b0;
     text-decoration: none;
     font-weight: 500;
     font-size: 14px;
@@ -163,21 +166,22 @@ body {
 
 .nav-menu > li > a:hover,
 .nav-menu > li.active > a {
-    color: #3b82f6;
+    color: #f5a623;
 }
 
 .dropdown-menu {
     position: absolute;
     top: 100%;
     left: 0;
-    background: white;
+    background: #111111;
     min-width: 220px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     list-style: none;
     display: none;
     z-index: 1000;
     border-radius: 8px;
     padding: 8px 0;
+    border: 1px solid #2a2a2a;
 }
 
 .dropdown:hover .dropdown-menu {
@@ -187,15 +191,15 @@ body {
 .dropdown-menu li a {
     display: block;
     padding: 10px 20px;
-    color: #475569;
+    color: #b0b0b0;
     text-decoration: none;
     font-size: 14px;
     transition: all 0.2s;
 }
 
 .dropdown-menu li a:hover {
-    background: #f1f5f9;
-    color: #3b82f6;
+    background: #1a1a1a;
+    color: #f5a623;
     padding-left: 24px;
 }
 
@@ -237,7 +241,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 100%);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 .slide-content {
@@ -264,7 +268,7 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(8px);
     color: white;
     border: none;
@@ -277,7 +281,7 @@ body {
 }
 
 .slider-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .slider-prev {
@@ -308,7 +312,7 @@ body {
 }
 
 .dot.active {
-    background: #3b82f6;
+    background: #f5a623;
     width: 24px;
     border-radius: 5px;
 }
@@ -319,8 +323,8 @@ body {
 .btn-primary {
     display: inline-block;
     padding: 12px 28px;
-    background: #3b82f6;
-    color: white;
+    background: #f5a623;
+    color: #000000;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;
@@ -331,27 +335,27 @@ body {
 }
 
 .btn-primary:hover {
-    background: #2563eb;
+    background: #e09512;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
 }
 
 .btn-secondary {
     display: inline-block;
     padding: 12px 28px;
     background: transparent;
-    color: #3b82f6;
+    color: #f5a623;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
-    border: 1px solid #3b82f6;
+    border: 1px solid #f5a623;
     transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-    background: #3b82f6;
-    color: white;
+    background: #f5a623;
+    color: #000000;
 }
 
 /* ============================================
@@ -366,7 +370,7 @@ body {
     margin-bottom: 48px;
     font-size: 32px;
     font-weight: 700;
-    color: #0f172a;
+    color: #ffffff;
     position: relative;
 }
 
@@ -378,7 +382,7 @@ body {
     transform: translateX(-50%);
     width: 60px;
     height: 3px;
-    background: #3b82f6;
+    background: #f5a623;
     border-radius: 2px;
 }
 
@@ -389,22 +393,24 @@ body {
 }
 
 .product-card {
-    background: white;
+    background: #111111;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    border: 1px solid #2a2a2a;
 }
 
 .product-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    border-color: #f5a623;
 }
 
 .product-image {
     height: 260px;
     overflow: hidden;
-    background: #f1f5f9;
+    background: #1a1a1a;
 }
 
 .product-image img {
@@ -430,27 +436,27 @@ body {
 }
 
 .product-info h3 a {
-    color: #0f172a;
+    color: #ffffff;
     text-decoration: none;
 }
 
 .product-info h3 a:hover {
-    color: #3b82f6;
+    color: #f5a623;
 }
 
 .price {
     font-size: 20px;
     font-weight: 700;
-    color: #0f172a;
+    color: #f5a623;
     margin-bottom: 16px;
 }
 
 .btn-add-to-cart {
     width: 100%;
     padding: 10px;
-    background: #f1f5f9;
-    color: #1e293b;
-    border: none;
+    background: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #2a2a2a;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
@@ -458,8 +464,9 @@ body {
 }
 
 .btn-add-to-cart:hover {
-    background: #3b82f6;
-    color: white;
+    background: #f5a623;
+    color: #000000;
+    border-color: #f5a623;
 }
 
 /* ============================================
@@ -467,7 +474,7 @@ body {
    ============================================ */
 .categories-showcase {
     padding: 60px 0;
-    background: #ffffff;
+    background: #050505;
 }
 
 .categories-grid {
@@ -499,12 +506,12 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 100%);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%);
     transition: all 0.3s;
 }
 
 .category-item:hover::before {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.6) 100%);
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.8) 0%, rgba(224, 149, 18, 0.6) 100%);
 }
 
 .category-item h3 {
@@ -518,8 +525,8 @@ body {
 .btn-category {
     display: inline-block;
     padding: 10px 24px;
-    background: white;
-    color: #0f172a;
+    background: #f5a623;
+    color: #000000;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;
@@ -529,8 +536,7 @@ body {
 }
 
 .btn-category:hover {
-    background: #3b82f6;
-    color: white;
+    background: #e09512;
     transform: scale(1.05);
 }
 
@@ -539,8 +545,8 @@ body {
    ============================================ */
 .seo-content {
     padding: 60px 0;
-    background: #f8fafc;
-    border-top: 1px solid #eef2ff;
+    background: #050505;
+    border-top: 1px solid #1a1a1a;
 }
 
 .seo-text {
@@ -550,21 +556,21 @@ body {
 }
 
 .seo-text h2 {
-    color: #0f172a;
+    color: #ffffff;
     margin-bottom: 20px;
     font-size: 28px;
     font-weight: 700;
 }
 
 .seo-text h3 {
-    color: #3b82f6;
+    color: #f5a623;
     margin: 30px 0 15px;
     font-size: 22px;
     font-weight: 600;
 }
 
 .seo-text p {
-    color: #475569;
+    color: #b0b0b0;
     line-height: 1.7;
     margin-bottom: 20px;
     font-size: 16px;
@@ -580,12 +586,12 @@ body {
 
 .seo-text ul li {
     margin: 12px 0;
-    color: #475569;
+    color: #b0b0b0;
     font-size: 16px;
 }
 
 .seo-text ul li i {
-    color: #3b82f6;
+    color: #f5a623;
     margin-right: 10px;
 }
 
@@ -593,9 +599,10 @@ body {
    FOOTER STYLES
    ============================================ */
 footer {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: #000000;
+    color: #b0b0b0;
     padding: 48px 0 24px;
+    border-top: 1px solid #1a1a1a;
 }
 
 .footer-grid {
@@ -606,7 +613,7 @@ footer {
 }
 
 .footer-col h3 {
-    color: white;
+    color: #ffffff;
     margin-bottom: 20px;
     font-size: 18px;
     font-weight: 600;
@@ -621,7 +628,7 @@ footer {
     left: 0;
     width: 40px;
     height: 2px;
-    background: #3b82f6;
+    background: #f5a623;
 }
 
 .footer-col ul {
@@ -633,39 +640,39 @@ footer {
 }
 
 .footer-col ul li a {
-    color: #94a3b8;
+    color: #8a8a8a;
     text-decoration: none;
     transition: all 0.2s;
     font-size: 14px;
 }
 
 .footer-col ul li a:hover {
-    color: #3b82f6;
+    color: #f5a623;
     padding-left: 5px;
 }
 
 .social-icons a {
     display: inline-block;
     margin-right: 12px;
-    color: #94a3b8;
+    color: #8a8a8a;
     font-size: 18px;
     transition: all 0.2s;
 }
 
 .social-icons a:hover {
-    color: #3b82f6;
+    color: #f5a623;
     transform: translateY(-2px);
 }
 
 .contact-info p {
     margin-bottom: 10px;
     font-size: 14px;
-    color: #94a3b8;
+    color: #8a8a8a;
 }
 
 .contact-info i {
     width: 24px;
-    color: #3b82f6;
+    color: #f5a623;
 }
 
 .newsletter {
@@ -675,7 +682,7 @@ footer {
 .newsletter h4 {
     font-size: 14px;
     margin-bottom: 12px;
-    color: white;
+    color: #ffffff;
 }
 
 .newsletter form {
@@ -688,14 +695,15 @@ footer {
     padding: 10px 12px;
     border: none;
     border-radius: 8px;
-    background: #1e293b;
-    color: white;
+    background: #111111;
+    color: #ffffff;
     font-size: 14px;
+    border: 1px solid #2a2a2a;
 }
 
 .newsletter button {
-    background: #3b82f6;
-    color: white;
+    background: #f5a623;
+    color: #000000;
     border: none;
     padding: 10px 16px;
     border-radius: 8px;
@@ -705,24 +713,24 @@ footer {
 }
 
 .newsletter button:hover {
-    background: #2563eb;
+    background: #e09512;
 }
 
 .footer-bottom {
     text-align: center;
     padding-top: 24px;
-    border-top: 1px solid #1e293b;
-    color: #64748b;
+    border-top: 1px solid #1a1a1a;
+    color: #6a6a6a;
     font-size: 13px;
 }
 
 .footer-bottom a {
-    color: #94a3b8;
+    color: #8a8a8a;
     text-decoration: none;
 }
 
 .footer-bottom a:hover {
-    color: #3b82f6;
+    color: #f5a623;
 }
 
 /* ============================================
@@ -732,15 +740,15 @@ footer {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #10b981;
-    color: white;
+    background: #f5a623;
+    color: #000000;
     padding: 12px 20px;
     border-radius: 8px;
     z-index: 9999;
     animation: slideIn 0.3s ease-out;
     font-size: 14px;
     font-weight: 500;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes slideIn {
