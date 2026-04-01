@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Yetu Kenya</title>
+    <meta name="description" content="Yetu privacy policy. Learn how we protect your personal information.">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .page-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .page-container h1 {
+            color: #f57224;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f57224;
+            padding-bottom: 10px;
+        }
+        .page-container h2 {
+            color: #333;
+            margin: 25px 0 15px;
+        }
+        .page-container p {
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 20px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header-placeholder"></div>
+    <main>
+        <div class="container">
+            <div class="page-container">
+                <h1>Privacy Policy</h1>
+                <p>Last updated: April 1, 2024</p>
+                
+                <h2>Information We Collect</h2>
+                <p>We collect information you provide when you place an order, including your name, phone number, email address, and shipping address. For M-Pesa payments, we process payment information securely through Safaricom.</p>
+                
+                <h2>How We Use Your Information</h2>
+                <p>We use your information to process orders, communicate order updates, and improve our services. We do not sell or share your personal information with third parties.</p>
+                
+                <h2>Data Security</h2>
+                <p>We implement industry-standard security measures to protect your personal information. All payment transactions are processed through secure, encrypted channels.</p>
+                
+                <h2>Cookies</h2>
+                <p>We use cookies to enhance your shopping experience and remember your cart items. You can disable cookies in your browser settings.</p>
+                
+                <h2>Contact Us</h2>
+                <p>For privacy concerns, contact us at <a href="mailto:privacy@yetu.com">privacy@yetu.com</a></p>
+            </div>
+        </div>
+    </main>
+    <div id="footer-placeholder"></div>
+    <script>
+        fetch('/header.html').then(r => r.text()).then(h => document.getElementById('header-placeholder').innerHTML = h);
+        fetch('/footer.html').then(r => r.text()).then(f => document.getElementById('footer-placeholder').innerHTML = f);
+    </script>
+</body>
+</html>
