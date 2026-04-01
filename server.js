@@ -4,6 +4,7 @@ const session = require('express-session');
 const path = require('path');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const compression = require('compression');
 const connectDB = require('./config/database');
 
 dotenv.config();
@@ -47,7 +48,7 @@ const initializeDatabase = async () => {
 
 initializeDatabase();
 
-// Security Headers
+// Security and Performance Headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -56,6 +57,9 @@ app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   next();
 });
+
+// Compression
+app.use(compression());
 
 // Middleware
 app.use(cors());
@@ -109,7 +113,13 @@ app.get('/sitemap.xml', async (req, res) => {
       { url: '', priority: 1.0, changefreq: 'daily' },
       { url: '/category', priority: 0.9, changefreq: 'daily' },
       { url: '/cart', priority: 0.5, changefreq: 'monthly' },
-      { url: '/checkout', priority: 0.5, changefreq: 'monthly' }
+      { url: '/checkout', priority: 0.5, changefreq: 'monthly' },
+      { url: '/shipping', priority: 0.6, changefreq: 'monthly' },
+      { url: '/returns', priority: 0.6, changefreq: 'monthly' },
+      { url: '/faq', priority: 0.6, changefreq: 'monthly' },
+      { url: '/privacy', priority: 0.5, changefreq: 'yearly' },
+      { url: '/terms', priority: 0.5, changefreq: 'yearly' },
+      { url: '/track-order', priority: 0.7, changefreq: 'weekly' }
     ];
     
     staticPages.forEach(page => {
@@ -196,6 +206,33 @@ app.get('/admin/orders', (req, res) => {
 
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
+});
+
+// ============================================
+// CUSTOMER SERVICE PAGES
+// ============================================
+app.get('/shipping', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'shipping.html'));
+});
+
+app.get('/returns', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'returns.html'));
+});
+
+app.get('/faq', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'faq.html'));
+});
+
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
+app.get('/track-order', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'track-order.html'));
 });
 
 // Health check endpoint
