@@ -62,10 +62,6 @@
             background: white;
             border-radius: 10px;
         }
-        .search-header h2 {
-            color: #f57224;
-            margin-bottom: 5px;
-        }
         @media (max-width: 768px) {
             .category-layout {
                 grid-template-columns: 1fr;
@@ -114,13 +110,11 @@
     <script src="/js/main.js"></script>
     <script src="/js/cart.js"></script>
     <script>
-        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const categoryId = urlParams.get('id');
         const searchQuery = urlParams.get('search');
         let allProducts = [];
         
-        // Show search header if searching
         if (searchQuery) {
             document.getElementById('searchHeader').style.display = 'block';
             document.getElementById('pageTitle').innerHTML = `Search Results: "${escapeHtml(searchQuery)}"`;
@@ -137,7 +131,7 @@
                         <li>
                             <a href="/category?id=${cat._id}" ${categoryId == cat._id ? 'class="active"' : ''}>${escapeHtml(cat.name)}</a>
                             ${cats.filter(c => c.parent_id === cat._id).length ? `
-                                <ul style="margin-left: 20px; margin-top: 5px;">
+                                <ul style="margin-left: 20px;">
                                     ${cats.filter(c => c.parent_id === cat._id).map(sub => `
                                         <li><a href="/category?id=${sub._id}" ${categoryId == sub._id ? 'class="active"' : ''}>${escapeHtml(sub.name)}</a></li>
                                     `).join('')}
@@ -153,11 +147,8 @@
         
         async function loadProducts() {
             let url = '/api/products';
-            if (categoryId) {
-                url += `?category=${categoryId}`;
-            } else if (searchQuery) {
-                url += `?search=${searchQuery}`;
-            }
+            if (categoryId) url += `?category=${categoryId}`;
+            else if (searchQuery) url += `?search=${searchQuery}`;
             
             try {
                 const response = await fetch(url);
@@ -179,24 +170,21 @@
                     <div style="text-align: center; padding: 50px; grid-column: 1/-1;">
                         <i class="fas fa-search" style="font-size: 48px; color: #ccc;"></i>
                         <h3>No products found</h3>
-                        <p>Try searching for something else</p>
-                        <a href="/" class="btn-primary" style="margin-top: 20px; display: inline-block;">Back to Home</a>
+                        <a href="/" class="btn-primary">Back to Home</a>
                     </div>
                 `;
             } else {
                 grid.innerHTML = products.map(p => `
-                    <div class="product-card" data-price="${p.price}" data-date="${p.created_at}">
+                    <div class="product-card">
                         <div class="product-image">
                             <a href="/product/${p._id}">
-                                <img src="${p.image || 'https://via.placeholder.com/250'}" alt="${escapeHtml(p.name)}">
+                                <img src="${p.image || '/images/products/placeholder.jpg'}" alt="${escapeHtml(p.name)}" onerror="this.src='/images/products/placeholder.jpg'">
                             </a>
                         </div>
                         <div class="product-info">
                             <h3><a href="/product/${p._id}">${escapeHtml(p.name)}</a></h3>
                             <p class="price">KSh ${(p.price || 0).toLocaleString()}</p>
-                            <button onclick="addToCart('${p._id}')" class="btn-add-to-cart">
-                                <i class="fas fa-shopping-cart"></i> Add to Cart
-                            </button>
+                            <button onclick="addToCart('${p._id}')" class="btn-add-to-cart">Add to Cart</button>
                         </div>
                     </div>
                 `).join('');
@@ -237,10 +225,8 @@
             }
         }
         
-        // Event listeners
         document.getElementById('sortBy').addEventListener('change', sortProducts);
         
-        // Initialize
         loadHeaderFooter();
         loadCategories();
         loadProducts();
