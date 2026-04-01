@@ -14,9 +14,9 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: MPESA_CONSUMER_KEY
-        value: 75ZYqCx3xbXvAt3ymvRZ4EsewrJDhnUCEUwkAWyAJwGWE78E
+        value: J4ZJK5gohN6hTEGJyFK128q5ivloLXTQrGYdLAHS79YW3aNU
       - key: MPESA_CONSUMER_SECRET
-        value: Z2nJOAZb1XqBrdjaWejH0rhxl9ff1DLSy6Sj7GWlUpXMlOTFDaKvV2zIad3vjBRl
+        value: xA7GS9fA5Zpzca2qVGOCcZcAFzqZP3rA3BCNXMpGndHGQTfxqTPSfeXsqgq9htpH
       - key: MPESA_SHORTCODE
         value: 174379
       - key: MPESA_PASSKEY
