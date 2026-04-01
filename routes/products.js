@@ -2,8 +2,7 @@ const express = require('express');
 const Product = require('../models/Product');
 const upload = require('../middleware/upload');
 const auth = require('../middleware/auth');
-const fs = require('fs');
-const path = require('path');
+const { cloudinary } = require('../config/cloudinary');
 
 const router = express.Router();
 
@@ -55,20 +54,13 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       featured: req.body.featured === 'true'
     };
     
-    // Add image if uploaded
     if (req.file) {
-      // Store the relative path
-      productData.image = `/images/products/${req.file.filename}`;
+      productData.image = req.file.path;
     }
     
     const product = new Product(productData);
     await product.save();
-    
-    res.status(201).json({
-      success: true,
-      product,
-      message: 'Product created successfully'
-    });
+    res.status(201).json(product);
   } catch (error) {
     console.error('Create product error:', error);
     res.status(400).json({ error: error.message });
@@ -92,25 +84,23 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
     product.stock = parseInt(req.body.stock) || 0;
     product.featured = req.body.featured === 'true';
     
-    // Update image if new one uploaded
     if (req.file) {
-      // Delete old image if it exists
-      if (product.image && product.image !== '/images/products/placeholder.jpg') {
-        const oldImagePath = path.join(__dirname, '../public', product.image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-          console.log(`🗑️ Deleted old image: ${oldImagePath}`);
+      // Delete old image from Cloudinary
+      if (product.image && product.image.includes('cloudinary')) {
+        try {
+          const urlParts = product.image.split('/');
+          const filename = urlParts[urlParts.length - 1].split('.')[0];
+          const publicId = `yetu/products/${filename}`;
+          await cloudinary.uploader.destroy(publicId);
+        } catch (err) {
+          console.error('Error deleting old image:', err);
         }
       }
-      product.image = `/images/products/${req.file.filename}`;
+      product.image = req.file.path;
     }
     
     await product.save();
-    res.json({
-      success: true,
-      product,
-      message: 'Product updated successfully'
-    });
+    res.json(product);
   } catch (error) {
     console.error('Update product error:', error);
     res.status(400).json({ error: error.message });
@@ -127,20 +117,20 @@ router.delete('/:id', auth, async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     
-    // Delete image file if it exists
-    if (product.image && product.image !== '/images/products/placeholder.jpg') {
-      const imagePath = path.join(__dirname, '../public', product.image);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-        console.log(`🗑️ Deleted image: ${imagePath}`);
+    // Delete image from Cloudinary
+    if (product.image && product.image.includes('cloudinary')) {
+      try {
+        const urlParts = product.image.split('/');
+        const filename = urlParts[urlParts.length - 1].split('.')[0];
+        const publicId = `yetu/products/${filename}`;
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.error('Error deleting image:', err);
       }
     }
     
     await Product.findByIdAndDelete(req.params.id);
-    res.json({ 
-      success: true,
-      message: 'Product deleted successfully' 
-    });
+    res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Delete product error:', error);
     res.status(500).json({ error: error.message });
