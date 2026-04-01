@@ -5,4 +5,5 @@ uploads/
 *.log
 
 # DO NOT ignore images - we want them in git
-# public/images/ is NOT ignored
+# Remove any lines that ignore public/images/
+# public/images/ should NOT be in .gitignore
