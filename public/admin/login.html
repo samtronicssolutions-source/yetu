@@ -59,10 +59,6 @@
         button:hover {
             background: #e05e1a;
         }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
         .error {
             background: #f8d7da;
             color: #721c24;
@@ -70,15 +66,6 @@
             border-radius: 5px;
             margin-bottom: 20px;
             display: none;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 10px;
-            color: #666;
-        }
-        .loading.show {
-            display: block;
         }
     </style>
 </head>
@@ -89,82 +76,49 @@
         <form id="loginForm">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" id="username" name="username" required autocomplete="username">
+                <input type="text" id="username" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <input type="password" id="password" required>
             </div>
-            <button type="submit" id="loginBtn">Login</button>
-            <div id="loading" class="loading">Logging in...</div>
+            <button type="submit">Login</button>
         </form>
     </div>
-
     <script>
-        // Clear any existing admin data on login page load
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
         
-        const form = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const loadingDiv = document.getElementById('loading');
-        const errorDiv = document.getElementById('error');
-        
-        form.addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
-            if (!username || !password) {
-                showError('Please enter both username and password');
-                return;
-            }
-            
-            // Disable button and show loading
-            loginBtn.disabled = true;
-            loadingDiv.classList.add('show');
-            errorDiv.style.display = 'none';
-            
             try {
                 const response = await fetch('/api/auth/admin/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    // Store token
                     localStorage.setItem('adminToken', data.token);
                     localStorage.setItem('adminUser', JSON.stringify(data.user));
-                    
-                    // Redirect to dashboard
                     window.location.href = '/admin/dashboard';
                 } else {
-                    showError(data.error || 'Invalid username or password');
-                    loginBtn.disabled = false;
-                    loadingDiv.classList.remove('show');
+                    const errorDiv = document.getElementById('error');
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showError('Network error. Please try again.');
-                loginBtn.disabled = false;
-                loadingDiv.classList.remove('show');
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
             }
         });
-        
-        function showError(message) {
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
     </script>
 </body>
 </html>
