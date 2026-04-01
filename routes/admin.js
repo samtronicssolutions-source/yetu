@@ -73,19 +73,18 @@ router.put('/orders/:id', auth, async (req, res) => {
   }
 });
 
-// Clear processed orders (completed, delivered, or paid orders)
-router.delete('/clear-processed-orders', auth, async (req, res) => {
+// Clear completed orders (paid, processing, delivered)
+router.delete('/clear-completed-orders', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
     
-    // Delete orders that are completed, delivered, or have completed payment
     const result = await Order.deleteMany({
       $or: [
         { status: 'completed' },
-        { status: 'delivered' },
         { status: 'processing' },
+        { status: 'delivered' },
         { payment_status: 'completed' }
       ]
     });
@@ -93,10 +92,30 @@ router.delete('/clear-processed-orders', auth, async (req, res) => {
     res.json({
       success: true,
       deletedCount: result.deletedCount,
-      message: `Successfully cleared ${result.deletedCount} processed orders`
+      message: `Successfully cleared ${result.deletedCount} completed orders`
     });
   } catch (error) {
-    console.error('Error clearing orders:', error);
+    console.error('Error clearing completed orders:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Clear ALL orders (including pending)
+router.delete('/clear-all-orders', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    const result = await Order.deleteMany({});
+    
+    res.json({
+      success: true,
+      deletedCount: result.deletedCount,
+      message: `Successfully cleared ALL ${result.deletedCount} orders`
+    });
+  } catch (error) {
+    console.error('Error clearing all orders:', error);
     res.status(500).json({ error: error.message });
   }
 });
