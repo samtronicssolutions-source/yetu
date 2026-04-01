@@ -28,18 +28,21 @@ app.use(session({
   }
 }));
 
+// Import routes
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
-const orderRoutes = require('./routes/orders');
+const orderRoutes = require('./routes/orders');  // <-- This must be correct
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 
+// API routes - ORDER MATTERS: test endpoint must come before param routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/api/orders', orderRoutes);  // This mounts the test endpoint at /api/orders/test-mpesa
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Serve HTML files
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -80,15 +83,18 @@ app.get('/admin/orders', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'orders.html'));
 });
 
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
