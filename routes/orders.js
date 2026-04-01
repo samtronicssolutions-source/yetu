@@ -5,6 +5,9 @@ const { initiateMpesaPayment, getAccessToken } = require('../utils/mpesa');
 
 const router = express.Router();
 
+// Store active connections for SSE
+let activeConnections = {};
+
 function formatPhoneNumber(phone) {
   let formatted = phone.toString().trim();
   formatted = formatted.replace(/\D/g, '');
@@ -20,21 +23,55 @@ function formatPhoneNumber(phone) {
 }
 
 // ============================================
-// DEBUG: Test callback endpoint
+// SERVER-SENT EVENTS FOR REAL-TIME PAYMENT STATUS
 // ============================================
-router.post('/test-callback', (req, res) => {
-  console.log('🧪 TEST CALLBACK RECEIVED!');
-  console.log('Body:', JSON.stringify(req.body, null, 2));
-  res.json({ received: true });
+router.get('/payment-stream/:checkoutId', (req, res) => {
+  const { checkoutId } = req.params;
+  
+  // Set headers for SSE
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
+  
+  // Send initial connection message
+  res.write(`data: ${JSON.stringify({ type: 'connected', checkoutId })}\n\n`);
+  
+  // Store the connection
+  if (!activeConnections[checkoutId]) {
+    activeConnections[checkoutId] = [];
+  }
+  activeConnections[checkoutId].push(res);
+  
+  // Remove connection when client closes
+  req.on('close', () => {
+    const index = activeConnections[checkoutId]?.indexOf(res);
+    if (index > -1) {
+      activeConnections[checkoutId].splice(index, 1);
+    }
+    if (activeConnections[checkoutId]?.length === 0) {
+      delete activeConnections[checkoutId];
+    }
+  });
 });
 
+// Function to send real-time updates
+function sendPaymentUpdate(checkoutId, data) {
+  if (activeConnections[checkoutId]) {
+    activeConnections[checkoutId].forEach(client => {
+      client.write(`data: ${JSON.stringify(data)}\n\n`);
+    });
+  }
+}
+
 // ============================================
-// CREATE ORDER - WAIT FOR PAYMENT CONFIRMATION
+// CREATE ORDER
 // ============================================
 router.post('/', async (req, res) => {
   try {
     console.log('\n📦 Processing order request...');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
     
     const { customer_name, customer_phone, customer_email, items, payment_method } = req.body;
     
@@ -70,7 +107,7 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // For Cash on Delivery - create order immediately
+    // Cash on Delivery
     if (payment_method === 'cod') {
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
       
@@ -88,7 +125,6 @@ router.post('/', async (req, res) => {
       
       await order.save();
       
-      // Update stock
       for (const item of items) {
         await Product.findByIdAndUpdate(item.product_id, {
           $inc: { stock: -item.quantity }
@@ -102,23 +138,25 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // For M-Pesa - initiate payment first, then create order after confirmation
+    // M-Pesa
     if (payment_method === 'mpesa') {
       const formattedPhone = formatPhoneNumber(customer_phone);
-      console.log('Initiating M-Pesa payment for phone:', formattedPhone);
-      console.log('Amount:', total);
-      console.log('Callback URL:', `${process.env.BASE_URL}/api/orders/mpesa-callback`);
+      const tempOrderNumber = `TEMP-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
       
-      const mpesaResponse = await initiateMpesaPayment(formattedPhone, total, `TEMP-${Date.now()}`);
+      console.log('Initiating M-Pesa payment...');
+      console.log('  Phone:', formattedPhone);
+      console.log('  Amount:', total);
+      console.log('  Callback URL:', `${process.env.BASE_URL}/api/orders/mpesa-callback`);
+      
+      const mpesaResponse = await initiateMpesaPayment(formattedPhone, total, tempOrderNumber);
       
       console.log('M-Pesa Response:', JSON.stringify(mpesaResponse, null, 2));
       
       if (mpesaResponse && !mpesaResponse.error && mpesaResponse.ResponseCode === '0') {
         const checkoutId = mpesaResponse.CheckoutRequestID;
         
-        // Store pending order data
+        // Store pending order
         const pendingOrder = {
-          tempId: checkoutId,
           customer_name,
           customer_phone,
           customer_email,
@@ -128,18 +166,25 @@ router.post('/', async (req, res) => {
           created_at: new Date()
         };
         
-        // Store in memory (for production, use Redis)
         if (!global.pendingOrders) global.pendingOrders = {};
         global.pendingOrders[checkoutId] = pendingOrder;
         
         console.log(`✅ M-Pesa initiated. Checkout ID: ${checkoutId}`);
-        console.log(`⏳ Waiting for callback...`);
         
-        // Set timeout to clean up if payment fails (10 minutes)
+        // Send initial waiting status via SSE
+        sendPaymentUpdate(checkoutId, { 
+          type: 'waiting', 
+          message: 'Payment initiated. Waiting for confirmation...' 
+        });
+        
+        // Clean up after 10 minutes
         setTimeout(() => {
           if (global.pendingOrders[checkoutId]) {
             delete global.pendingOrders[checkoutId];
-            console.log(`⏰ Cleaned up pending order: ${checkoutId}`);
+            sendPaymentUpdate(checkoutId, { 
+              type: 'timeout', 
+              message: 'Payment timeout. Please try again.' 
+            });
           }
         }, 10 * 60 * 1000);
         
@@ -147,13 +192,13 @@ router.post('/', async (req, res) => {
           success: true,
           waiting_for_payment: true,
           checkout_id: checkoutId,
-          message: 'M-Pesa payment initiated. Please check your phone and enter PIN to complete payment.'
+          message: 'M-Pesa payment initiated. Please check your phone.'
         });
       } else {
         console.error('❌ M-Pesa initiation failed:', mpesaResponse);
         return res.status(400).json({
           success: false,
-          error: 'Payment initiation failed. Please try again or choose Cash on Delivery.'
+          error: 'Payment initiation failed. Please try again.'
         });
       }
     }
@@ -165,62 +210,18 @@ router.post('/', async (req, res) => {
 });
 
 // ============================================
-// CHECK PAYMENT STATUS
-// ============================================
-router.get('/payment-status/:checkoutId', async (req, res) => {
-  try {
-    const { checkoutId } = req.params;
-    console.log(`🔍 Checking payment status for: ${checkoutId}`);
-    
-    // Check if order was already created (successful payment)
-    const existingOrder = await Order.findOne({ mpesa_transaction_id: checkoutId });
-    if (existingOrder) {
-      console.log(`✅ Order found: ${existingOrder.order_number}`);
-      return res.json({
-        success: true,
-        status: 'completed',
-        order_number: existingOrder.order_number,
-        message: 'Payment successful! Order created.'
-      });
-    }
-    
-    // Check pending order
-    if (global.pendingOrders && global.pendingOrders[checkoutId]) {
-      console.log(`⏳ Payment still pending for: ${checkoutId}`);
-      return res.json({
-        success: true,
-        status: 'pending',
-        message: 'Payment pending. Please complete payment on your phone.'
-      });
-    }
-    
-    console.log(`❌ No order found for: ${checkoutId}`);
-    return res.json({
-      success: false,
-      status: 'unknown',
-      message: 'Payment status unknown. Please contact support.'
-    });
-    
-  } catch (error) {
-    console.error('Error checking payment status:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================
-// M-PESA CALLBACK - CRITICAL: This must work
+// M-PESA CALLBACK - INSTANT ORDER CREATION
 // ============================================
 router.post('/mpesa-callback', async (req, res) => {
   try {
     console.log('\n📞 ========== M-PESA CALLBACK RECEIVED ==========');
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Full Body:', JSON.stringify(req.body, null, 2));
+    console.log('Time:', new Date().toISOString());
+    console.log('Body:', JSON.stringify(req.body, null, 2));
     
     const data = req.body;
     
     if (!data.Body || !data.Body.stkCallback) {
-      console.log('⚠️ Invalid callback structure - missing stkCallback');
+      console.log('⚠️ Invalid callback structure');
       return res.json({ ResultCode: 1, ResultDesc: 'Invalid callback structure' });
     }
     
@@ -229,99 +230,110 @@ router.post('/mpesa-callback', async (req, res) => {
     const checkoutId = callback.CheckoutRequestID;
     const resultDesc = callback.ResultDesc;
     
-    console.log(`\n📋 Callback Details:`);
-    console.log(`  Checkout ID: ${checkoutId}`);
-    console.log(`  Result Code: ${resultCode}`);
-    console.log(`  Result Description: ${resultDesc}`);
+    console.log(`Checkout ID: ${checkoutId}, Result: ${resultCode}, Desc: ${resultDesc}`);
     
-    // Check if there's a pending order waiting for this checkout ID
     const pendingOrder = global.pendingOrders ? global.pendingOrders[checkoutId] : null;
     
-    if (resultCode === 0) {
-      // PAYMENT SUCCESSFUL
-      console.log(`\n✅✅✅ PAYMENT SUCCESSFUL! ✅✅✅`);
+    if (resultCode === 0 && pendingOrder) {
+      // PAYMENT SUCCESSFUL - INSTANT ORDER CREATION
+      console.log('✅✅✅ PAYMENT SUCCESSFUL! Creating order...');
       
-      if (pendingOrder) {
-        console.log('📦 Creating order from pending data...');
-        
-        // Extract payment metadata
-        const items = callback.CallbackMetadata?.Item || [];
-        let mpesaReceipt = '';
-        let amount = 0;
-        
-        console.log('\n💰 Payment Metadata:');
-        for (const item of items) {
-          console.log(`  ${item.Name}: ${item.Value}`);
-          if (item.Name === 'MpesaReceiptNumber') {
-            mpesaReceipt = item.Value;
-          }
-          if (item.Name === 'Amount') {
-            amount = item.Value;
-          }
-        }
-        
-        // Generate permanent order number
-        const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
-        
-        // Create the order
-        const order = new Order({
-          order_number: orderNumber,
-          customer_name: pendingOrder.customer_name,
-          customer_phone: pendingOrder.customer_phone,
-          customer_email: pendingOrder.customer_email,
-          items: pendingOrder.items,
-          total_amount: pendingOrder.total_amount,
-          payment_method: 'mpesa',
-          payment_status: 'completed',
-          status: 'processing',
-          mpesa_transaction_id: mpesaReceipt || checkoutId
+      // Extract receipt
+      const items = callback.CallbackMetadata?.Item || [];
+      let mpesaReceipt = '';
+      for (const item of items) {
+        if (item.Name === 'MpesaReceiptNumber') mpesaReceipt = item.Value;
+      }
+      
+      // Create order immediately
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+      
+      const order = new Order({
+        order_number: orderNumber,
+        customer_name: pendingOrder.customer_name,
+        customer_phone: pendingOrder.customer_phone,
+        customer_email: pendingOrder.customer_email,
+        items: pendingOrder.items,
+        total_amount: pendingOrder.total_amount,
+        payment_method: 'mpesa',
+        payment_status: 'completed',
+        status: 'processing',
+        mpesa_transaction_id: mpesaReceipt || checkoutId
+      });
+      
+      await order.save();
+      console.log(`✅ Order created: ${orderNumber}`);
+      
+      // Update stock
+      for (const item of pendingOrder.items) {
+        await Product.findByIdAndUpdate(item.product_id, {
+          $inc: { stock: -item.quantity }
         });
-        
-        await order.save();
-        console.log(`✅ Order created: ${orderNumber}`);
-        
-        // Update stock
-        for (const item of pendingOrder.items) {
-          await Product.findByIdAndUpdate(item.product_id, {
-            $inc: { stock: -item.quantity }
-          });
-          console.log(`  Stock updated for product: ${item.product_id}`);
-        }
-        
-        // Clean up pending order
-        delete global.pendingOrders[checkoutId];
-        console.log(`✅ Cleaned up pending order`);
-        
-      } else {
-        console.log(`⚠️ No pending order found for checkout ID: ${checkoutId}`);
-        
-        // Check if order already exists
-        const existingOrder = await Order.findOne({ mpesa_transaction_id: checkoutId });
-        if (existingOrder) {
-          console.log(`✅ Order already exists: ${existingOrder.order_number}`);
-        } else {
-          console.log(`❌ ERROR: Payment successful but no order data found!`);
-          console.log(`   Checkout ID: ${checkoutId}`);
-          console.log(`   Pending orders: ${Object.keys(global.pendingOrders || {})}`);
-        }
+      }
+      
+      // Send instant update via SSE
+      sendPaymentUpdate(checkoutId, {
+        type: 'success',
+        order_number: orderNumber,
+        message: 'Payment successful! Order confirmed.'
+      });
+      
+      // Clean up
+      delete global.pendingOrders[checkoutId];
+      
+    } else if (resultCode === 0 && !pendingOrder) {
+      console.log(`⚠️ Payment successful but no pending order for: ${checkoutId}`);
+      
+      // Check if order already exists
+      const existingOrder = await Order.findOne({ mpesa_transaction_id: checkoutId });
+      if (existingOrder) {
+        console.log(`✅ Order already exists: ${existingOrder.order_number}`);
+        sendPaymentUpdate(checkoutId, {
+          type: 'success',
+          order_number: existingOrder.order_number,
+          message: 'Payment confirmed!'
+        });
       }
       
     } else {
       // PAYMENT FAILED
-      console.log(`\n❌ PAYMENT FAILED: ${resultDesc}`);
-      
+      console.log(`❌ PAYMENT FAILED: ${resultDesc}`);
       if (pendingOrder) {
-        console.log('🧹 Cleaning up failed payment...');
+        sendPaymentUpdate(checkoutId, {
+          type: 'failed',
+          message: resultDesc || 'Payment failed. Please try again.'
+        });
         delete global.pendingOrders[checkoutId];
       }
     }
     
-    console.log('\n========== CALLBACK PROCESSED ==========\n');
     res.json({ ResultCode: 0, ResultDesc: 'Success' });
     
   } catch (error) {
-    console.error('❌ M-Pesa callback error:', error);
-    res.json({ ResultCode: 1, ResultDesc: 'Error processing callback' });
+    console.error('❌ Callback error:', error);
+    res.json({ ResultCode: 1, ResultDesc: 'Error' });
+  }
+});
+
+// ============================================
+// POLLING FALLBACK (kept for compatibility)
+// ============================================
+router.get('/payment-status/:checkoutId', async (req, res) => {
+  try {
+    const { checkoutId } = req.params;
+    
+    const order = await Order.findOne({ mpesa_transaction_id: checkoutId });
+    if (order) {
+      return res.json({ status: 'completed', order_number: order.order_number });
+    }
+    
+    if (global.pendingOrders && global.pendingOrders[checkoutId]) {
+      return res.json({ status: 'pending' });
+    }
+    
+    return res.json({ status: 'unknown' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
