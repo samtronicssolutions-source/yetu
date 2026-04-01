@@ -3,12 +3,12 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <h3>About Yetu</h3>
-                <p>Your trusted partner for quality products in Kenya. We offer the best selection of electronics, kitchenware, furniture, clothing, audio, TV, accessories, and more.</p>
+                <p>Your trusted partner for quality products in Kenya. We offer the best selection of Audio, TV, Accessories, and more at affordable prices with fast delivery across Kenya.</p>
                 <div class="social-icons" style="margin-top: 15px;">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://facebook.com/yetu" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                    <a href="https://twitter.com/yetu" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                    <a href="https://instagram.com/yetu" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                    <a href="https://wa.me/254700000000" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
             <div class="footer-col">
@@ -20,44 +20,84 @@
             <div class="footer-col">
                 <h3>Customer Service</h3>
                 <ul>
-                    <li><a href="/shipping">Shipping Info</a></li>
-                    <li><a href="/returns">Returns Policy</a></li>
-                    <li><a href="/faq">FAQ</a></li>
+                    <li><a href="/shipping">Shipping Information</a></li>
+                    <li><a href="/returns">Returns & Refunds</a></li>
+                    <li><a href="/faq">Frequently Asked Questions</a></li>
                     <li><a href="/privacy">Privacy Policy</a></li>
                     <li><a href="/terms">Terms & Conditions</a></li>
+                    <li><a href="/track-order">Track Your Order</a></li>
                 </ul>
             </div>
             <div class="footer-col">
                 <h3>Contact Us</h3>
-                <p><i class="fas fa-phone"></i> +254 741842196</p>
-                <p><i class="fas fa-envelope"></i> yetu.solutions@gmail.com</p>
-                <p><i class="fas fa-map-marker-alt"></i> Nairobi, Eldoret, Kenya</p>
-                <p><i class="fas fa-clock"></i> Mon-Sat: 8am - 8pm</p>
+                <div class="contact-info">
+                    <p><i class="fas fa-phone"></i> <a href="tel:+254700000000">+254 700 000 000</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:info@yetu.com">info@yetu.com</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:support@yetu.com">support@yetu.com</a></p>
+                    <p><i class="fas fa-map-marker-alt"></i> Westlands, Nairobi, Kenya</p>
+                    <p><i class="fas fa-clock"></i> Mon-Fri: 8am - 8pm<br>Sat-Sun: 9am - 5pm</p>
+                </div>
+                <div class="newsletter" style="margin-top: 15px;">
+                    <h4>Newsletter</h4>
+                    <form id="newsletterForm">
+                        <input type="email" placeholder="Your email" required>
+                        <button type="submit">Subscribe</button>
+                    </form>
+                </div>
             </div>
         </div>
         <div class="footer-bottom">
             <p>&copy; 2024 Yetu. All rights reserved. | Quality products for every home in Kenya</p>
+            <p style="margin-top: 10px; font-size: 12px;">
+                <a href="/privacy">Privacy</a> | 
+                <a href="/terms">Terms</a> | 
+                <a href="/sitemap.xml">Sitemap</a>
+            </p>
         </div>
     </div>
 </footer>
 
 <script>
+    // Load categories for footer
     async function loadFooterCategories() {
         try {
             const res = await fetch('/api/categories');
             const categories = await res.json();
-            const mainCats = categories.filter(c => !c.parent_id).slice(0, 8);
+            const mainCats = categories.filter(c => !c.parent_id).slice(0, 6);
             
             const footerList = document.getElementById('footerCategories');
             if (footerList) {
                 footerList.innerHTML = mainCats.map(cat => `
-                    <li><a href="/category?id=${cat._id}">${cat.name}</a></li>
+                    <li><a href="/category?id=${cat._id}">${escapeHtml(cat.name)}</a></li>
                 `).join('');
             }
         } catch (error) {
             console.error('Error loading footer categories:', error);
         }
     }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Newsletter subscription
+    document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = e.target.querySelector('input[type="email"]').value;
+        
+        if (email) {
+            // Store in localStorage or send to backend
+            localStorage.setItem('newsletter_email', email);
+            alert('Thank you for subscribing to our newsletter!');
+            e.target.reset();
+        }
+    });
     
     loadFooterCategories();
 </script>
