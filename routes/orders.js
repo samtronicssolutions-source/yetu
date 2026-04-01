@@ -1,26 +1,84 @@
 const express = require('express');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const { initiateMpesaPayment } = require('../utils/mpesa');
+const { initiateMpesaPayment, getAccessToken } = require('../utils/mpesa');
 
 const router = express.Router();
 
-function formatPhoneNumber(phone) {
-  let formatted = phone.toString().trim();
-  formatted = formatted.replace(/\D/g, '');
-  
-  if (formatted.startsWith('0')) {
-    formatted = '254' + formatted.substring(1);
-  } else if (formatted.startsWith('254')) {
-    // Already correct
-  } else if (formatted.startsWith('+254')) {
-    formatted = formatted.substring(1);
-  } else {
-    formatted = '254' + formatted;
+// ============================================
+// TEST ENDPOINT - Check M-Pesa Credentials
+// ============================================
+router.get('/test-mpesa', async (req, res) => {
+  try {
+    console.log('🧪 Testing M-Pesa credentials...');
+    
+    // Test 1: Get access token
+    console.log('Step 1: Getting access token...');
+    const token = await getAccessToken();
+    
+    if (!token) {
+      return res.json({ 
+        success: false, 
+        step: 'access_token',
+        message: 'Failed to get access token. Check your MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET' 
+      });
+    }
+    
+    console.log('✅ Access token obtained');
+    
+    // Test 2: Initiate STK push with test credentials
+    console.log('Step 2: Testing STK push...');
+    const testPhone = '254708374149';  // Sandbox test number
+    const testAmount = 10;
+    const testOrder = `TEST-${Date.now()}`;
+    
+    const result = await initiateMpesaPayment(testPhone, testAmount, testOrder);
+    
+    if (!result) {
+      return res.json({ 
+        success: false, 
+        step: 'stk_push',
+        message: 'STK push returned null. Check your MPESA_SHORTCODE and MPESA_PASSKEY' 
+      });
+    }
+    
+    if (result.error) {
+      return res.json({ 
+        success: false, 
+        step: 'stk_push',
+        error: result,
+        message: result.message || 'STK push failed' 
+      });
+    }
+    
+    // Success!
+    res.json({
+      success: true,
+      message: 'M-Pesa credentials are working!',
+      details: {
+        access_token_received: true,
+        stk_response: {
+          ResponseCode: result.ResponseCode,
+          ResponseDescription: result.ResponseDescription,
+          CheckoutRequestID: result.CheckoutRequestID,
+          MerchantRequestID: result.MerchantRequestID
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('Test endpoint error:', error);
+    res.json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
   }
-  return formatted;
-}
+});
 
+// ============================================
+// CREATE ORDER
+// ============================================
 router.post('/', async (req, res) => {
   try {
     console.log('\n📦 Creating new order...');
@@ -133,6 +191,9 @@ router.post('/', async (req, res) => {
   }
 });
 
+// ============================================
+// GET ORDER BY NUMBER
+// ============================================
 router.get('/:orderNumber', async (req, res) => {
   try {
     const order = await Order.findOne({ order_number: req.params.orderNumber })
@@ -144,6 +205,9 @@ router.get('/:orderNumber', async (req, res) => {
   }
 });
 
+// ============================================
+// M-PESA CALLBACK
+// ============================================
 router.post('/mpesa-callback', async (req, res) => {
   try {
     console.log('\n📞 M-Pesa Callback received');
@@ -209,32 +273,20 @@ router.post('/mpesa-callback', async (req, res) => {
   }
 });
 
-module.exports = router;
-// TEMPORARY: Test M-Pesa credentials (remove after testing)
-router.get('/test-mpesa', async (req, res) => {
-  try {
-    const { initiateMpesaPayment, getAccessToken } = require('../utils/mpesa');
-    
-    // Test access token
-    const token = await getAccessToken();
-    if (!token) {
-      return res.json({ success: false, message: 'Failed to get access token' });
-    }
-    
-    // Test STK push with test phone
-    const testPhone = '254708374149';
-    const testAmount = 10;
-    const testOrder = `TEST-${Date.now()}`;
-    
-    const result = await initiateMpesaPayment(testPhone, testAmount, testOrder);
-    
-    res.json({
-      success: !!result,
-      token_received: !!token,
-      stk_result: result,
-      message: result?.ResponseDescription || result?.message || 'Test completed'
-    });
-  } catch (error) {
-    res.json({ success: false, error: error.message });
+// Helper function
+function formatPhoneNumber(phone) {
+  let formatted = phone.toString().trim();
+  formatted = formatted.replace(/\D/g, '');
+  
+  if (formatted.startsWith('0')) {
+    formatted = '254' + formatted.substring(1);
+  } else if (formatted.startsWith('+254')) {
+    formatted = formatted.substring(1);
+  } else if (!formatted.startsWith('254')) {
+    formatted = '254' + formatted;
   }
-});
+  
+  return formatted;
+}
+
+module.exports = router;
