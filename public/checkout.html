@@ -13,92 +13,12 @@
             gap: 30px;
             margin: 30px 0;
         }
-        .checkout-form {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .order-summary {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            height: fit-content;
-        }
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .summary-total {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #f57224;
-            font-weight: bold;
-        }
-        .btn-place-order {
-            width: 100%;
-            padding: 15px;
-            background: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .btn-place-order:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .mpesa-note {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-size: 12px;
-            color: #666;
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
         .payment-status {
             margin-top: 20px;
             padding: 20px;
             border-radius: 8px;
             text-align: center;
             display: none;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         .payment-status.waiting {
             background: #fff3cd;
@@ -115,13 +35,22 @@
             color: #721c24;
             display: block;
         }
-        .payment-status i {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        .payment-status .btn-primary {
-            margin-top: 15px;
+        .loading-spinner {
             display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f57224;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -138,8 +67,7 @@
     <script src="/js/main.js"></script>
     <script src="/js/cart.js"></script>
     <script>
-        let eventSource = null;
-        let currentCheckoutId = null;
+        let statusInterval = null;
         
         async function loadCheckout() {
             const cart = getCart();
@@ -187,10 +115,6 @@
                                         <option value="cod">Cash on Delivery</option>
                                     </select>
                                 </div>
-                                <div class="mpesa-note" id="mpesaNote">
-                                    <i class="fas fa-info-circle"></i> 
-                                    For M-Pesa payments, you will receive a payment request on your phone.
-                                </div>
                                 <button type="submit" class="btn-place-order" id="placeOrderBtn">
                                     <i class="fas fa-check"></i> Place Order
                                 </button>
@@ -212,16 +136,9 @@
                     </div>
                 `;
                 
-                const paymentSelect = document.getElementById('paymentMethod');
-                const mpesaNote = document.getElementById('mpesaNote');
-                
-                paymentSelect.addEventListener('change', () => {
-                    mpesaNote.style.display = paymentSelect.value === 'mpesa' ? 'block' : 'none';
-                });
-                
                 document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    await placeOrder(total);
+                    await placeOrder();
                 });
                 
             } catch (error) {
@@ -229,7 +146,7 @@
             }
         }
         
-        async function placeOrder(total) {
+        async function placeOrder() {
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -238,13 +155,7 @@
             const statusDiv = document.getElementById('paymentStatus');
             
             if (!name || !phone || !email) {
-                showNotification('Please fill all fields', 'error');
-                return;
-            }
-            
-            const phoneRegex = /^(254|0)?[7-9][0-9]{8}$/;
-            if (!phoneRegex.test(phone)) {
-                showNotification('Please enter a valid Kenyan phone number', 'error');
+                alert('Please fill all fields');
                 return;
             }
             
@@ -270,31 +181,26 @@
                 const result = await response.json();
                 
                 if (paymentMethod === 'mpesa') {
-                    if (result.waiting_for_payment) {
-                        currentCheckoutId = result.checkout_id;
+                    if (result.success) {
+                        // Clear cart
+                        localStorage.removeItem('cart');
+                        updateCartCount();
                         
                         // Show waiting status
                         statusDiv.className = 'payment-status waiting';
                         statusDiv.innerHTML = `
                             <i class="fas fa-clock"></i>
                             <h3>Waiting for Payment</h3>
-                            <p>Please check your phone (${phone}) and enter your PIN to complete payment.</p>
-                            <div class="loading-spinner" style="border-color: #856404; border-top-color: transparent;"></div>
-                            <p style="margin-top: 10px; font-size: 14px;">This should take less than 30 seconds...</p>
+                            <p>Please check your phone and enter your PIN to complete payment.</p>
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 10px;">This will automatically update when payment is confirmed...</p>
                         `;
                         
-                        // Clear cart immediately
-                        localStorage.removeItem('cart');
-                        updateCartCount();
+                        // Start polling for payment status
+                        startPolling(result.order_number);
                         
-                        // Connect to Server-Sent Events for real-time updates
-                        connectToPaymentStream(currentCheckoutId);
-                        
-                    } else if (result.success && result.order_number) {
-                        localStorage.removeItem('cart');
-                        window.location.href = `/order-success?order=${result.order_number}`;
                     } else {
-                        showNotification(result.error || 'Payment initiation failed', 'error');
+                        alert(result.error || 'Order failed');
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
                     }
@@ -303,112 +209,47 @@
                         localStorage.removeItem('cart');
                         window.location.href = `/order-success?order=${result.order_number}`;
                     } else {
-                        showNotification(result.error || 'Order failed', 'error');
+                        alert(result.error || 'Order failed');
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
                     }
                 }
                 
             } catch (error) {
-                console.error('Error placing order:', error);
-                showNotification('Network error. Please try again.', 'error');
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-check"></i> Place Order';
             }
         }
         
-        function connectToPaymentStream(checkoutId) {
-            // Close existing connection if any
-            if (eventSource) {
-                eventSource.close();
-            }
-            
-            // Create EventSource connection
-            eventSource = new EventSource(`/api/orders/payment-stream/${checkoutId}`);
-            
-            eventSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                console.log('Payment update:', data);
-                
-                const statusDiv = document.getElementById('paymentStatus');
-                
-                if (data.type === 'success') {
-                    // Payment successful - instant redirect
-                    statusDiv.className = 'payment-status success';
-                    statusDiv.innerHTML = `
-                        <i class="fas fa-check-circle"></i>
-                        <h3>Payment Successful!</h3>
-                        <p>Your order ${data.order_number} has been confirmed.</p>
-                        <div class="loading-spinner" style="border-color: #155724; border-top-color: transparent;"></div>
-                        <p>Redirecting to order confirmation...</p>
-                    `;
-                    
-                    eventSource.close();
-                    
-                    // Redirect to success page
-                    setTimeout(() => {
-                        window.location.href = `/order-success?order=${data.order_number}`;
-                    }, 2000);
-                    
-                } else if (data.type === 'failed') {
-                    // Payment failed
-                    statusDiv.className = 'payment-status failed';
-                    statusDiv.innerHTML = `
-                        <i class="fas fa-times-circle"></i>
-                        <h3>Payment Failed</h3>
-                        <p>${data.message || 'Payment was not completed. Please try again.'}</p>
-                        <a href="/cart" class="btn-primary">Return to Cart</a>
-                    `;
-                    eventSource.close();
-                    
-                } else if (data.type === 'timeout') {
-                    // Payment timeout
-                    statusDiv.className = 'payment-status failed';
-                    statusDiv.innerHTML = `
-                        <i class="fas fa-clock"></i>
-                        <h3>Payment Timeout</h3>
-                        <p>Payment confirmation not received. Please try again.</p>
-                        <a href="/cart" class="btn-primary">Return to Cart</a>
-                    `;
-                    eventSource.close();
-                }
-            };
-            
-            eventSource.onerror = function(error) {
-                console.error('EventSource error:', error);
-                // Fallback to polling if SSE fails
-                startPollingFallback(checkoutId);
-            };
-        }
-        
-        // Fallback polling in case SSE fails
-        function startPollingFallback(checkoutId) {
+        function startPolling(orderNumber) {
             let attempts = 0;
-            const maxAttempts = 20; // 20 seconds max
+            const maxAttempts = 30; // 30 seconds max
             
-            const interval = setInterval(async () => {
+            statusInterval = setInterval(async () => {
                 attempts++;
                 
                 try {
-                    const response = await fetch(`/api/orders/payment-status/${checkoutId}`);
+                    const response = await fetch(`/api/orders/payment-status/${orderNumber}`);
                     const result = await response.json();
                     
                     if (result.status === 'completed') {
-                        clearInterval(interval);
+                        clearInterval(statusInterval);
                         const statusDiv = document.getElementById('paymentStatus');
                         statusDiv.className = 'payment-status success';
                         statusDiv.innerHTML = `
                             <i class="fas fa-check-circle"></i>
                             <h3>Payment Successful!</h3>
-                            <p>Your order ${result.order_number} has been confirmed.</p>
+                            <p>Your order has been confirmed.</p>
                             <p>Redirecting...</p>
                         `;
                         setTimeout(() => {
-                            window.location.href = `/order-success?order=${result.order_number}`;
+                            window.location.href = `/order-success?order=${orderNumber}`;
                         }, 2000);
                         
                     } else if (result.status === 'failed' || attempts >= maxAttempts) {
-                        clearInterval(interval);
+                        clearInterval(statusInterval);
                         const statusDiv = document.getElementById('paymentStatus');
                         statusDiv.className = 'payment-status failed';
                         statusDiv.innerHTML = `
