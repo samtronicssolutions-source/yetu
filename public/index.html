@@ -51,7 +51,7 @@
                         <div class="product-card">
                             <div class="product-image">
                                 <a href="/product/${p._id}">
-                                    <img src="${p.image || 'https://via.placeholder.com/250'}" alt="${p.name}">
+                                    <img src="${p.image || '/images/products/placeholder.jpg'}" alt="${p.name}" onerror="this.src='/images/products/placeholder.jpg'">
                                 </a>
                             </div>
                             <div class="product-info">
