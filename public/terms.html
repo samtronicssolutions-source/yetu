@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions - Yetu Kenya</title>
+    <meta name="description" content="Yetu terms and conditions for using our e-commerce platform.">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .page-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .page-container h1 {
+            color: #f57224;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f57224;
+            padding-bottom: 10px;
+        }
+        .page-container h2 {
+            color: #333;
+            margin: 25px 0 15px;
+        }
+        .page-container p {
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 20px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header-placeholder"></div>
+    <main>
+        <div class="container">
+            <div class="page-container">
+                <h1>Terms & Conditions</h1>
+                <p>Last updated: April 1, 2024</p>
+                
+                <h2>Acceptance of Terms</h2>
+                <p>By using Yetu e-commerce platform, you agree to these terms and conditions. If you do not agree, please do not use our services.</p>
+                
+                <h2>Products and Pricing</h2>
+                <p>All product descriptions and prices are subject to change without notice. We reserve the right to modify or discontinue products at any time.</p>
+                
+                <h2>Orders</h2>
+                <p>We reserve the right to refuse or cancel any order for any reason, including product availability, pricing errors, or suspected fraud.</p>
+                
+                <h2>Payments</h2>
+                <p>All payments are processed securely. For M-Pesa payments, you authorize us to initiate the payment request to your phone number.</p>
+                
+                <h2>Shipping and Delivery</h2>
+                <p>Delivery times are estimates and not guaranteed. We are not liable for delays caused by third-party courier services.</p>
+                
+                <h2>Returns and Refunds</h2>
+                <p>Please refer to our Returns Policy for detailed information about returns and refunds.</p>
+                
+                <h2>Limitation of Liability</h2>
+                <p>Yetu shall not be liable for any indirect, incidental, or consequential damages arising from your use of our services.</p>
+                
+                <h2>Contact Us</h2>
+                <p>For questions about these terms, contact us at <a href="mailto:legal@yetu.com">legal@yetu.com</a></p>
+            </div>
+        </div>
+    </main>
+    <div id="footer-placeholder"></div>
+    <script>
+        fetch('/header.html').then(r => r.text()).then(h => document.getElementById('header-placeholder').innerHTML = h);
+        fetch('/footer.html').then(r => r.text()).then(f => document.getElementById('footer-placeholder').innerHTML = f);
+    </script>
+</body>
+</html>
